@@ -1012,7 +1012,7 @@
     <p class="hc-quote">一个月一个月，慢慢记下去。</p>
     <div class="h-prop prop-moon">
       <span class="pm-moon"></span>
-      <p class="pm-state" id="liveMoon">🌙 还没有标记</p>
+      <p class="pm-state" id="liveMoon">🧙 还没有标记</p>
     </div>
     <span class="h-enter">推开月亮小屋的门 →</span>
   </a>
@@ -1053,7 +1053,7 @@
       </div>
     </div>
     <div class="mn-view" id="view-line" hidden>
-      <p class="line-title">最近几次来访</p>
+      <p class="line-title">老巫婆来的记录</p>
       <div class="dots" id="dots"></div>
       <p class="dots-sub" id="dotsSub"></p>
       <div class="line-recs" id="lineRecs"></div>
@@ -1067,7 +1067,7 @@
     </div>
     <div class="drawer" id="drawer" hidden>
       <div class="moon-recs" id="moonRecs"></div>
-      <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记一次过去的来访</button>
+      <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记过去的一次</button>
       <p class="moon-note">记录只存在这台手机的浏览器里，不上传、没有账号；<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就好。</p>
     </div>
   </div>
@@ -1377,7 +1377,10 @@
       document.body.classList.add('opened');
       $('#letter').classList.add('show');
       window.scrollTo(0, 0);
-      renderRoute();
+      /* Tony 要求：不管链接带了什么板块地址，开门永远先落在「家」；
+         改 hash 会自动触发 hashchange → renderRoute */
+      if (location.hash && location.hash !== '#/') { location.hash = '#/'; }
+      else { renderRoute(); }
       var reveals = document.querySelectorAll('.reveal');
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
@@ -2079,39 +2082,39 @@
     var dayN = act ? dayDiff(act.start, t) + 1 : 0;
     var s = { act: act, st: st, dayN: dayN, big: '', sub: '', dialBig: '', dialSub: '', btn: '', go: false };
     if (act && dayN <= PERIOD_LEN_LONG) {
-      s.big = '月亮拜访中 · 今天第 <em>' + dayN + '</em> 天';
-      s.dialBig = '月亮拜访中<br>今天第 <em>' + dayN + '</em> 天';
+      s.big = '老巫婆来了 · 今天第 <em>' + dayN + '</em> 天';
+      s.dialBig = '老巫婆来了<br>今天第 <em>' + dayN + '</em> 天';
       s.sub = dayN > PERIOD_LEN_OK
         ? '已经 ' + dayN + ' 天了，一般来 3–7 天；要是其实已经走了，点下面记一下'
         : '走了那天，再点一下下面的按钮就好';
       s.dialSub = '走了那天，点这里或下面的按钮';
-      s.btn = '月亮今天走了'; s.go = true;
+      s.btn = '老巫婆今天走了'; s.go = true;
     } else if (act) { /* 超过 10 天没记走，多半是忘了 */
       s.big = '上一次好像忘了记走';
       s.dialBig = '上一次好像<br>忘了记走';
       s.sub = '没关系，点下面直接记今天这个新的开始，上一次会自动收好';
-      s.dialSub = '点一下月亮，开始新的一次';
-      s.btn = '月亮今天来了';
+      s.dialSub = '点一下，开始新的一次';
+      s.btn = '老巫婆今天来了';
     } else if (periods.length) {
       s.big = '小屋静悄悄的';
       s.dialBig = '小屋静悄悄的';
       if (st.next) {
         var dl = dayDiff(t, st.next);
         if (dl < 0) s.sub = '预测的 ' + prettyShort(st.next) + ' 过了还没来——也很正常，再等等它';
-        else if (dl <= 2) s.sub = '预计就在这两天，留意身体的小信号';
-        else s.sub = '下次约在 ' + prettyShort(st.next) + ' 前后 · 还有 ' + dl + ' 天';
-        s.dialSub = '下次约 ' + prettyShort(st.next) + ' 前后';
+        else if (dl <= 2) s.sub = '老巫婆就在这两天，留意身体的小信号';
+        else s.sub = '老巫婆下次约在 ' + prettyShort(st.next) + ' 前后 · 还有 ' + dl + ' 天';
+        s.dialSub = '老巫婆下次约 ' + prettyShort(st.next) + ' 前后';
       } else {
-        s.sub = '再记一次，就能估出下次的日子';
+        s.sub = '再记一次，就能估出老巫婆下次的日子';
         s.dialSub = '再记一次，就能估下次的日子';
       }
-      s.btn = '月亮今天来了';
+      s.btn = '老巫婆今天来了';
     } else {
-      s.big = '月亮还没来过';
-      s.dialBig = '月亮还没来过';
-      s.sub = '来的那天，点一下下面的按钮就记好了，不用填表';
-      s.dialSub = '来的那天，点一下月亮就好';
-      s.btn = '月亮今天来了';
+      s.big = '老巫婆还没来过';
+      s.dialBig = '老巫婆还没来过';
+      s.sub = '老巫婆来的那天，点一下下面的按钮就记好了，不用填表';
+      s.dialSub = '老巫婆来的那天，点一下就好';
+      s.btn = '老巫婆今天来了';
     }
     return s;
   }
@@ -2157,7 +2160,7 @@
     if (!periods.length) {
       var e = document.createElement('div');
       e.className = 'rec-empty';
-      e.textContent = '还没有记录。来的那天点一下大按钮就好；想补记过去的，点下面的「补记一次过去的来访」。';
+      e.textContent = '还没有记录。老巫婆来的那天点一下大按钮就好；想补记过去的，点下面的「补记过去的一次」。';
       moonRecs.appendChild(e);
       return;
     }
@@ -2190,7 +2193,7 @@
     dots.innerHTML = '';
     lineRecs.innerHTML = '';
     if (!items.length) {
-      dotsSub.textContent = '还没有记录，来的那天点下面的按钮就好';
+      dotsSub.textContent = '还没有记录，老巫婆来的那天点下面的按钮就好';
       return;
     }
     var html = '';
@@ -2201,8 +2204,8 @@
     });
     dots.innerHTML = html;
     dotsSub.textContent = s.st.next
-      ? '实心是来过的月份，空心是预计 · 下次约 ' + prettyShort(s.st.next)
-      : '实心是来过的月份 · 再记一次就能估出下次';
+      ? '实心是老巫婆来过的月份，空心是预计 · 下次约 ' + prettyShort(s.st.next)
+      : '实心是老巫婆来过的月份 · 再记一次就能估出下次';
     periods.slice(0, 3).forEach(function (p) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -2251,7 +2254,7 @@
       savePeriods();
       renderMoon();
       celebrate(moonMain);
-      showUndo('记好啦：月亮今天来了' + note, undoable(snap));
+      showUndo('记好啦：老巫婆今天来了' + note, undoable(snap));
     }
   }
   moonMain.addEventListener('click', logToday);
@@ -2404,9 +2407,9 @@
     var el = $('#liveMoon');
     if (!el) return;
     var act = activePeriod(), st = periodStats();
-    if (act) el.textContent = '🌙 拜访中 · 第 ' + (dayDiff(act.start, todayStr()) + 1) + ' 天';
-    else if (st.next) el.textContent = '🌙 约 ' + prettyShort(st.next) + ' 再来';
-    else el.textContent = '🌙 还没有标记';
+    if (act) el.textContent = '🧙 老巫婆来了 · 第 ' + (dayDiff(act.start, todayStr()) + 1) + ' 天';
+    else if (st.next) el.textContent = '🧙 老巫婆约 ' + prettyShort(st.next) + ' 再来';
+    else el.textContent = '🧙 还没有标记';
   }
 
   renderJournal();
