@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  🏠 雨霖之家 · 欢迎来到雨霖之家
+  ─────────────────────────────
+  想改内容，只看这几处：
+  1. 纪念日 / 落款：在文件最底部的 <script> 里，找「只需要改这里」
+  2. 信的文字：直接在本文件里搜索对应句子修改即可
+  3. 四个板块（信/日常连载/爱心票亭/月亮小屋）：在本文件最底部的 <script> 里
+     找「篇章数据区 ⭐」，按注释改；日记配图放 photos/ 文件夹即可
+  4. 月亮小屋（生理期小日历）：点日历上的日子记「来了/走了」，一个月一个月记下去；
+     数据只存在她手机浏览器的 localStorage 里，不上传服务器；
+     换手机或清理浏览器数据会丢，页面里有「备份 / 导入」
+  托管：GitHub Pages（仓库 yulin-home）。改完内容 git push 上去就自动重新发布，链接不变。
+  看她的留言：她的悄悄话走 Forminit 表单通道直送骑士的 Gmail，Forminit 后台也留有存档。
+-->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#232344" />
+<meta property="og:title" content="雨霖之家 · 欢迎来到雨霖之家" />
+<meta property="og:description" content="欢迎来到雨霖之家——信、日常、票亭和月亮小屋，灯都给你留着。" />
+<title>雨霖之家 · 欢迎来到雨霖之家</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23c98a8a' d='M12 21s-7.5-4.9-10-9.3C.4 8.9 1.6 5 5.2 4.2 7.3 3.8 9 4.6 12 7c3-2.4 4.7-3.2 6.8-2.8 3.6.8 4.8 4.7 3.2 7.5C19.5 16.1 12 21 12 21z'/%3E%3C/svg%3E" />
+<script>
+/* 信纸字体：优先国内源，失败换备用源，再不行自动退回系统楷体 */
+(function () {
+  var urls = [
+    'https://registry.npmmirror.com/lxgw-wenkai-webfont/1.7.0/files/style.css',
+    'https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css'
+  ];
+  var i = 0, done = false;
+  function tryNext() {
+    if (done || i >= urls.length) return;
+    var href = urls[i++], settled = false;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = href;
+    l.onload = function () { done = true; };
+    l.onerror = function () { if (!settled) { settled = true; tryNext(); } };
+    document.head.appendChild(l);
+    setTimeout(function () { if (!done && !settled) { settled = true; tryNext(); } }, 3500);
+  }
+  tryNext();
+})();
+</script>
+<style>
+  :root {
+    --night1: #1f2040; --night2: #35345f; --night3: #5c4d78; --night4: #97718a;
+    --paper: #fffaf1; --ink: #4d4139; --ink-soft: #8a7a6d;
+    --rose: #c98a8a; --rose-deep: #b96f6f; --gold: #d4b483;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "LXGW WenKai", "LXGW WenKai Lite", "Kaiti SC", "STKaiti", "KaiTi", "DFKai-SB", serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--night1) 0%, var(--night2) 42%, var(--night3) 74%, var(--night4) 100%) fixed;
+    min-height: 100vh; min-height: 100svh;
+    overflow-x: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body:not(.opened) { overflow: hidden; }
+  body::after { /* 四角暗角，让夜空更有层次 */
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(12,12,32,.45) 100%);
+  }
+
+  /* ── 星空背景 ─────────────────────────── */
+  #sky { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    opacity: .18; animation: twinkle var(--d, 2.6s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: .12; } to { opacity: .85; } }
+  .moon {
+    position: absolute; top: 7%; right: 10%;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff8e9, #f5dfae 62%, #eed6a0);
+    box-shadow: 0 0 38px 10px rgba(255,230,170,.28), 0 0 110px 36px rgba(255,220,150,.12);
+    animation: moonGlow 6s ease-in-out infinite alternate;
+  }
+  @keyframes moonGlow { from { filter: brightness(.96); } to { filter: brightness(1.06); } }
+  .shooting {
+    position: absolute; width: 120px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), #fff);
+    opacity: 0; animation: shoot 1.3s ease-out forwards;
+  }
+  @keyframes shoot {
+    0%   { opacity: 0;   transform: translate(0,0) rotate(26deg); }
+    10%  { opacity: .9; }
+    100% { opacity: 0;   transform: translate(-280px,150px) rotate(26deg); }
+  }
+
+  /* ── 开场：信封 ─────────────────────────── */
+  #intro {
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 24px; text-align: center; user-select: none;
+    transition: opacity 1s ease, visibility 0s 1s;
+  }
+  body.opened #intro { opacity: 0; visibility: hidden; pointer-events: none; }
+  .intro-kicker {
+    font-size: 11px; letter-spacing: .52em; text-indent: .52em;
+    color: var(--gold); text-transform: uppercase;
+  }
+  .intro-title {
+    font-size: clamp(30px, 8vw, 40px); font-weight: normal;
+    color: #fff; letter-spacing: .3em; text-indent: .3em;
+  }
+  .intro-sub { font-size: 14px; color: rgba(255,255,255,.72); letter-spacing: .18em; }
+
+  .door-plate {
+    margin-top: 16px; width: max-content; padding: 7px 24px; border-radius: 999px;
+    background: linear-gradient(180deg, #f6ead2, #e7d5b2); color: #8a6a48;
+    font-size: 13.5px; letter-spacing: .3em; text-indent: .3em;
+    box-shadow: 0 6px 16px rgba(8,8,26,.35), inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  .door-wrap { perspective: 1100px; margin-top: 14px; }
+  .door-float { animation: floaty 3.4s ease-in-out infinite; }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .door {
+    position: relative; width: min(236px, 58vw); height: min(316px, 76vw);
+    cursor: pointer; outline: none; transition: transform .3s ease;
+  }
+  .door:hover, .door:focus-visible { transform: translateY(-4px); }
+  .door-frame {
+    position: absolute; inset: 0; border-radius: 999px 999px 10px 10px;
+    background: linear-gradient(180deg, #e8d9bf, #d8c5a4);
+    box-shadow: 0 26px 50px rgba(8,8,26,.5), inset 0 2px 0 rgba(255,255,255,.55);
+  }
+  .door-glow {
+    position: absolute; inset: 12px; border-radius: 999px 999px 6px 6px;
+    background: radial-gradient(ellipse at 50% 72%, #ffedb9, #f2c98d 58%, #c99f6b);
+    box-shadow: inset 0 0 34px rgba(120,70,30,.38);
+    transition: filter 1s ease;
+  }
+  .door.open .door-glow { filter: brightness(1.18) saturate(1.1); }
+  .door-panel {
+    position: absolute; top: 12px; bottom: 12px; width: calc(50% - 12px);
+    background: linear-gradient(180deg, #f0e4cc, #e1cfae);
+    z-index: 2; backface-visibility: hidden;
+    transition: transform 1.1s cubic-bezier(.6,.05,.3,1);
+    box-shadow: inset -3px 0 6px rgba(120,90,50,.16);
+  }
+  .door-panel.l { left: 12px; transform-origin: left center; border-radius: 999px 0 0 4px; }
+  .door-panel.r { right: 12px; transform-origin: right center; border-radius: 0 999px 4px 0; box-shadow: inset 3px 0 6px rgba(120,90,50,.16); }
+  .door.open .door-panel.l { transform: rotateY(-106deg); }
+  .door.open .door-panel.r { transform: rotateY(106deg); }
+  .door-panel .heart {
+    position: absolute; left: 50%; top: 27%; transform: translateX(-50%);
+    color: #c08a76; font-size: 15px; text-shadow: 0 1px 0 rgba(255,255,255,.45);
+  }
+  .door-panel .knob {
+    position: absolute; top: 53%; width: 12px; height: 12px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f7e6b8, #cfa254 75%);
+    box-shadow: 0 1px 3px rgba(90,60,20,.45);
+  }
+  .door-panel.l .knob { right: 9px; }
+  .door-panel.r .knob { left: 9px; }
+  .door-shadow {
+    width: 56%; height: 16px; margin-top: 20px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0,0,0,.4), transparent 68%);
+    filter: blur(3px); animation: shadowPulse 3.4s ease-in-out infinite;
+  }
+  @keyframes shadowPulse { 0%,100% { transform: scaleX(1); opacity: .8; } 50% { transform: scaleX(.88); opacity: .55; } }
+  .intro-hint {
+    margin-top: 4px; font-size: 13px; color: rgba(255,255,255,.6);
+    letter-spacing: .2em; text-indent: .2em;
+    animation: hintPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes hintPulse { 0%,100% { opacity: .45; } 50% { opacity: .95; } }
+  body.opened .intro-hint, body.opened .door-shadow { animation: none; }
+
+  /* ── 家 · 首页（封面 + 章节长滚动）─────────────────────────── */
+  #page-home { padding-top: 5vh; }
+  .h-hero { position: relative; min-height: 82vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2vh 0 8vh; }
+  .h-kicker { font-size: 11px; letter-spacing: .5em; text-indent: .5em; color: var(--gold); text-transform: uppercase; }
+  .h-title { margin-top: 18px; font-size: clamp(42px, 13vw, 60px); font-weight: normal; color: #fff; letter-spacing: .18em; text-indent: .18em; text-shadow: 0 0 34px rgba(244,214,164,.35); }
+  .h-sub { margin-top: 16px; font-size: 13.5px; color: rgba(255,255,255,.72); letter-spacing: .3em; text-indent: .3em; }
+  .h-divider { display: flex; align-items: center; gap: 12px; width: min(300px, 72%); margin: 28px auto 0; }
+  .h-divider .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); }
+  .h-count { margin-top: 32px; }
+  .h-count-label { font-size: 12.5px; color: rgba(255,255,255,.55); letter-spacing: .42em; text-indent: .42em; }
+  .h-count-num { margin-top: 10px; color: #fff; }
+  .h-count-num .n { font-size: clamp(58px, 19vw, 84px); line-height: 1.15; letter-spacing: .04em; text-shadow: 0 0 44px rgba(244,214,164,.4); font-variant-numeric: tabular-nums; }
+  .h-count-num .unit { font-size: 17px; margin-left: 10px; color: rgba(255,255,255,.75); letter-spacing: .2em; }
+  .h-count-clock { margin-top: 6px; font-size: 13px; color: rgba(255,255,255,.5); letter-spacing: .34em; font-variant-numeric: tabular-nums; }
+  .h-vertical {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    writing-mode: vertical-rl; font-size: 11.5px; color: rgba(255,255,255,.38);
+    letter-spacing: .55em;
+  }
+  .h-down { margin-top: 40px; font-size: 19px; color: rgba(255,255,255,.55); animation: hDown 2.2s ease-in-out infinite; }
+  @keyframes hDown { 0%,100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(8px); opacity: 1; } }
+  .h-down-tip { margin-top: 10px; font-size: 11px; color: rgba(255,255,255,.42); letter-spacing: .4em; text-indent: .4em; }
+
+  .h-chap { position: relative; display: block; text-decoration: none; color: #fff; padding: 9vh 4px 10vh; border-top: 1px solid rgba(255,255,255,.12); }
+  .h-chap.alt { text-align: right; }
+  .hc-head { display: flex; align-items: baseline; gap: 16px; }
+  .h-chap.alt .hc-head { justify-content: flex-end; }
+  .hc-no { font-size: 13px; color: var(--gold); letter-spacing: .3em; }
+  .hc-name { font-size: clamp(38px, 12vw, 54px); font-weight: normal; letter-spacing: .22em; color: #fff; }
+  .hc-quote { margin-top: 14px; font-size: 13px; line-height: 2.1; color: rgba(255,255,255,.6); letter-spacing: .12em; }
+  .h-chap.alt .hc-quote { margin-left: auto; }
+  .h-prop { position: relative; display: inline-block; margin-top: 36px; text-align: left; }
+  .h-enter { display: inline-block; margin-top: 28px; font-size: 12px; color: rgba(255,255,255,.48); letter-spacing: .26em; transition: color .3s ease; }
+  .h-chap:hover .h-enter { color: var(--gold); }
+  .h-chap:active .h-prop { transform: scale(.97); }
+  .h-rv { opacity: 0; transform: translateY(30px); transition: opacity .9s ease, transform .9s ease; }
+  .h-rv.in { opacity: 1; transform: none; }
+
+  .prop-letter {
+    width: min(250px, 76%); background: var(--paper); border-radius: 10px;
+    padding: 22px 20px 18px; transform: rotate(-2.2deg);
+    box-shadow: 0 18px 44px rgba(8,8,26,.5);
+    background-image: radial-gradient(rgba(120,90,60,.045) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .pl-greet { font-size: 19px; color: var(--ink); letter-spacing: .14em; }
+  .pl-sub { margin-top: 8px; font-size: 12px; color: var(--ink-soft); letter-spacing: .18em; }
+  .pl-seal {
+    position: absolute; right: 14px; bottom: -14px; width: 34px; height: 34px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 30%, #d99a9a, #b96f6f 70%); color: #fff7ef;
+    font-size: 14px; line-height: 34px; text-align: center; box-shadow: 0 3px 8px rgba(90,40,40,.4);
+  }
+  .prop-polaroid {
+    width: 186px; background: #fff; border-radius: 4px; padding: 12px 12px 0;
+    box-shadow: 0 16px 38px rgba(8,8,26,.5); transform: rotate(2.6deg);
+  }
+  .pp-star {
+    display: block; height: 128px; line-height: 128px; font-size: 52px; color: #f5dfae;
+    background: linear-gradient(160deg, #2b2a52, #5c4d78 70%, #97718a); text-align: center;
+    text-shadow: 0 0 18px rgba(255,235,180,.5);
+  }
+  .pp-cap { padding: 10px 0 12px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: .14em; text-align: center; }
+  .prop-ticket {
+    display: flex; background: var(--paper); border-radius: 12px; overflow: hidden;
+    transform: rotate(-1.6deg); box-shadow: 0 16px 38px rgba(8,8,26,.5);
+  }
+  .pt-stub {
+    flex: 0 0 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    border-right: 2px dashed rgba(201,138,138,.5); background: rgba(201,138,138,.08); padding: 14px 4px;
+  }
+  .pt-ic { font-size: 20px; }
+  .pt-no { font-size: 9.5px; color: var(--ink-soft); letter-spacing: .1em; }
+  .pt-body { padding: 14px 18px; }
+  .pt-name { font-size: 16.5px; color: var(--ink); letter-spacing: .1em; }
+  .pt-sub { margin-top: 5px; font-size: 11px; color: var(--ink-soft); letter-spacing: .14em; }
+  .prop-moon { display: flex; align-items: center; gap: 16px; }
+  .pm-moon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff8e9, #f5dfae 62%, #eed6a0);
+    box-shadow: 0 0 34px 8px rgba(255,230,170,.3);
+    animation: moonGlow 6s ease-in-out infinite alternate;
+  }
+  .pm-state { font-size: 12.5px; color: rgba(255,255,255,.66); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+
+  .h-foot { padding: 3vh 0 10vh; text-align: center; }
+  .h-foot-line { margin-top: 20px; font-size: 12.5px; color: rgba(255,255,255,.55); letter-spacing: .3em; text-indent: .3em; }
+  .h-foot-moon { margin-top: 12px; font-size: 11.5px; color: rgba(255,255,255,.4); letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+
+  /* ── 信纸 ─────────────────────────── */
+  main { position: relative; z-index: 10; display: none; padding: 7vh 16px 120px; }
+  main.show { display: block; animation: rise 1s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+  .paper {
+    position: relative; max-width: 620px; margin: 0 auto;
+    background: var(--paper); border-radius: 16px;
+    padding: clamp(30px, 6vw, 52px);
+    box-shadow: 0 24px 60px rgba(8,8,26,.5), inset 0 1px 0 rgba(255,255,255,.8);
+    background-image: radial-gradient(rgba(120,90,60,.045) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .tape {
+    position: absolute; top: -13px; left: 50%; width: 118px; height: 28px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: rgba(222,166,166,.5); border-radius: 2px;
+    box-shadow: 0 2px 5px rgba(80,50,50,.12);
+  }
+  .writedate { text-align: right; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .1em; margin-bottom: 26px; }
+  .greet { font-size: 22px; font-weight: normal; letter-spacing: .12em; min-height: 1.6em; margin-bottom: 18px; }
+  .caret { display: inline-block; width: 2px; height: 1.05em; background: var(--rose); margin-left: 5px; vertical-align: -.12em; animation: blink 1s steps(1) infinite; }
+  .caret.off { display: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .sec p { margin: 0 0 15px; line-height: 2.05; text-align: justify; font-size: 16px; }
+  .sec-title {
+    text-align: center; font-weight: normal; font-size: 15.5px;
+    letter-spacing: .4em; text-indent: .4em; margin: 36px 0 18px; color: var(--ink);
+  }
+  .sec-title::before { content: "✦ "; color: var(--gold); font-size: 11px; vertical-align: .18em; }
+  .sec-title::after  { content: " ✦"; color: var(--gold); font-size: 11px; vertical-align: .18em; }
+  ul.mini { list-style: none; margin: 4px 0 8px; }
+  ul.mini li { position: relative; padding-left: 1.5em; margin: 11px 0; line-height: 1.9; font-size: 15.5px; }
+  ul.mini li::before { content: "♥"; position: absolute; left: .15em; top: .18em; color: var(--rose); font-size: .72em; }
+  ul.promise { list-style: none; margin: 4px 0 8px; }
+  ul.promise li { position: relative; padding-left: 1.5em; margin: 11px 0; line-height: 1.9; font-size: 15.5px; }
+  ul.promise li::before { content: "✦"; position: absolute; left: .1em; top: .12em; color: var(--gold); font-size: .8em; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 32px 0; }
+  .divider .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(90,75,65,.28), transparent); }
+
+  .counter { text-align: center; margin: 28px 0; padding: 18px 8px 16px; border-top: 1px solid rgba(90,75,65,.14); border-bottom: 1px solid rgba(90,75,65,.14); }
+  .counter-label { font-size: 13.5px; color: var(--ink-soft); letter-spacing: .3em; text-indent: .3em; }
+  .counter-num { margin: 6px 0 2px; color: var(--rose-deep); }
+  .counter-num .n { font-size: 40px; line-height: 1.2; }
+  .counter-num .unit { font-size: 16px; margin-left: 6px; }
+  .counter-clock { font-size: 13px; color: var(--ink-soft); letter-spacing: .3em; font-variant-numeric: tabular-nums; }
+  .counter-sub { margin-top: 8px; font-size: 12px; color: rgba(138,122,109,.75); letter-spacing: .15em; }
+
+  .question { text-align: center; margin-top: 6px; transition: opacity .5s ease, transform .5s ease; }
+  .question.gone { opacity: 0; transform: translateY(-10px) scale(.98); }
+  .q-lead { font-size: 13.5px; color: var(--ink-soft); letter-spacing: .3em; text-indent: .3em; margin-bottom: 16px; }
+  .q-title { font-weight: normal; font-size: clamp(20px, 5.6vw, 25px); line-height: 1.9; letter-spacing: .1em; margin-bottom: 26px; }
+  .btns { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+  .btn {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 999px;
+    padding: 12px 36px; font-size: 16px; letter-spacing: .18em; text-indent: .18em;
+    transition: transform .3s ease, box-shadow .3s ease, opacity .3s ease;
+  }
+  .btn-yes {
+    background: linear-gradient(135deg, #d49a9a, #c07e7e); color: #fff;
+    box-shadow: 0 8px 22px rgba(200,130,130,.42);
+    animation: beat 2s ease-in-out infinite;
+  }
+  .btn-yes:hover { filter: brightness(1.05); box-shadow: 0 10px 26px rgba(200,130,130,.55); }
+  @keyframes beat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .btn-no { background: transparent; color: var(--ink-soft); border: 1px solid rgba(90,75,65,.35); }
+  .btn-no:hover { color: var(--ink); }
+
+  .final { display: none; text-align: center; opacity: 0; transform: translateY(24px); transition: opacity .9s ease, transform .9s ease; }
+  .final.show { display: block; }
+  .final.in { opacity: 1; transform: none; }
+  .final .q-title { min-height: 1.9em; }
+  .ps-note { margin-top: 18px; font-size: 13px; color: rgba(138,122,109,.85); line-height: 1.9; text-wrap: balance; }
+
+  .signature { text-align: right; margin-top: 34px; font-size: 16.5px; letter-spacing: .1em; }
+  .ps { margin-top: 10px; text-align: right; font-size: 13px; color: var(--ink-soft); letter-spacing: .05em; text-wrap: balance; }
+  .foot { text-align: center; margin: 30px auto 8px; font-size: 12px; color: rgba(255,255,255,.55); letter-spacing: .3em; text-indent: .3em; }
+
+  /* ── 解压小物 ─────────────────────────── */
+  .w-lead { text-align: center; font-size: 14px; color: var(--ink-soft); letter-spacing: .12em; margin-bottom: 18px; }
+  .widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .widget {
+    background: rgba(201,138,138,.07); border: 1px dashed rgba(201,138,138,.4);
+    border-radius: 14px; padding: 16px 12px 14px;
+    display: flex; flex-direction: column; align-items: center; user-select: none;
+  }
+  .widget-wide { grid-column: 1 / -1; }
+  .w-title { font-size: 13px; letter-spacing: .3em; text-indent: .3em; color: #a0766e; margin-bottom: 12px; }
+  .wstat { font-size: 12px; color: var(--ink-soft); letter-spacing: .15em; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .bubblewrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 180px; }
+  .bub {
+    aspect-ratio: 1; border-radius: 50%; cursor: pointer;
+    background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(255,255,255,.35) 38%, rgba(190,150,130,.16) 72%);
+    box-shadow: inset 0 -2px 4px rgba(160,120,100,.22), 0 1px 2px rgba(160,120,100,.14);
+    transition: transform .08s ease;
+  }
+  .bub:active { transform: scale(.9); }
+  .bub.pop-anim { animation: popA .14s ease; }
+  @keyframes popA { 0% { transform: scale(1); } 45% { transform: scale(1.32); } 100% { transform: scale(.92); } }
+  .bub.popped {
+    background: radial-gradient(circle at 50% 50%, rgba(190,150,130,.1), rgba(190,150,130,.04) 70%);
+    box-shadow: inset 0 2px 5px rgba(160,120,100,.28);
+    transform: scale(.92); pointer-events: none;
+  }
+  .btn-refill {
+    margin-top: 8px; font-family: inherit; cursor: pointer;
+    background: transparent; border: 1px solid rgba(201,138,138,.5); color: var(--rose-deep);
+    border-radius: 999px; padding: 5px 16px; font-size: 12.5px; letter-spacing: .2em; text-indent: .2em;
+    transition: background .25s ease;
+  }
+  .btn-refill:hover { background: rgba(201,138,138,.12); }
+  .squishy-wrap { position: relative; padding-top: 4px; }
+  .squishy {
+    position: relative; width: 108px; height: 100px; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #f7d7d0, #eeb3ab 78%);
+    border-radius: 48% 52% 55% 45% / 55% 48% 52% 45%;
+    box-shadow: inset -6px -8px 14px rgba(190,110,100,.22), inset 6px 8px 12px rgba(255,255,255,.5), 0 10px 18px rgba(150,90,80,.16);
+    transition: transform .16s ease;
+  }
+  .squishy.squishing { transform: scale(1.16, .8) translateY(9px); transition: transform .12s ease; }
+  .squishy.wobble { animation: wob .55s ease; }
+  @keyframes wob {
+    0% { transform: scale(1.16, .8); } 32% { transform: scale(.92, 1.1); }
+    60% { transform: scale(1.05, .96); } 100% { transform: none; }
+  }
+  .squishy .eye { position: absolute; top: 36px; width: 9px; height: 10px; border-radius: 50%; background: #6b4a44; }
+  .squishy .eye.l { left: 27px; } .squishy .eye.r { right: 27px; }
+  .squishy .blush { position: absolute; top: 52px; width: 14px; height: 7px; border-radius: 50%; background: rgba(228,110,110,.32); }
+  .squishy .blush.l { left: 17px; } .squishy .blush.r { right: 17px; }
+  .squishy .mouth {
+    position: absolute; top: 50px; left: 50%; width: 14px; height: 9px;
+    transform: translateX(-50%); border: 2px solid #6b4a44; border-color: transparent transparent #6b4a44 transparent;
+    border-radius: 50%;
+  }
+  .squishy.squishing .eye { top: 38px; width: 13px; height: 7px; background: transparent; border-top: 2.5px solid #6b4a44; border-radius: 50% 50% 0 0; }
+  .squishy.squishing .mouth { top: 50px; width: 8px; height: 8px; border: 2px solid #6b4a44; background: #e2857e; }
+  .squish-word {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    font-size: 14px; color: var(--rose-deep); letter-spacing: .1em; opacity: 0; pointer-events: none; white-space: nowrap;
+  }
+  .squish-word.go { animation: wordUp 1.1s ease forwards; }
+  @keyframes wordUp { 0% { opacity: 0; transform: translate(-50%, 8px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -26px); } }
+  .spark-wrap { position: relative; width: 100%; height: 180px; border-radius: 12px; overflow: hidden; }
+  .spark-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+  .spark-hint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; letter-spacing: .3em; text-indent: .3em; color: rgba(255,246,224,.5);
+    pointer-events: none; transition: opacity .6s ease;
+  }
+  .spark-hint.off { opacity: 0; }
+  .moon { cursor: pointer; }
+  .moon.wink { animation: winkA 1.2s ease; }
+  @keyframes winkA { 0% { filter: brightness(1); } 30% { filter: brightness(1.55); } 60% { filter: brightness(.9); } 100% { filter: brightness(1); } }
+
+  /* ── 悄悄话信箱 ─────────────────────────── */
+  .mailbox textarea {
+    width: 100%; min-height: 100px; resize: vertical;
+    font-family: inherit; font-size: 15px; color: var(--ink); line-height: 1.9;
+    background: rgba(255,255,255,.55); border: 1px dashed rgba(201,138,138,.45);
+    border-radius: 12px; padding: 12px 14px; outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  .mailbox textarea:focus { border-color: rgba(201,138,138,.85); box-shadow: 0 0 0 3px rgba(201,138,138,.12); }
+  .mailbox textarea::placeholder { color: rgba(138,122,109,.55); }
+  .msg-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .msg-count { font-size: 12px; color: rgba(138,122,109,.7); font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+  .btn-send {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 999px;
+    padding: 9px 30px; font-size: 14.5px; letter-spacing: .2em; text-indent: .2em;
+    background: linear-gradient(135deg, #d49a9a, #c07e7e); color: #fff;
+    box-shadow: 0 6px 16px rgba(200,130,130,.35);
+    transition: transform .25s ease, opacity .25s ease, box-shadow .25s ease;
+  }
+  .btn-send:hover { box-shadow: 0 8px 20px rgba(200,130,130,.5); }
+  .btn-send:disabled { opacity: .55; transform: scale(.96); cursor: default; }
+  .msg-tip { text-align: center; font-size: 13px; color: var(--rose-deep); letter-spacing: .12em; min-height: 1.6em; margin-top: 8px; opacity: 0; transition: opacity .5s ease; }
+  .msg-tip.show { opacity: 1; }
+
+  /* ── 漂浮小心心 ─────────────────────────── */
+  .fly-heart {
+    position: fixed; z-index: 60; pointer-events: none; line-height: 1;
+    animation: fly 1.35s ease-out forwards;
+  }
+  @keyframes fly {
+    from { opacity: .95; transform: translate(-50%,-50%) scale(.5); }
+    70%  { opacity: .85; }
+    to   { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -90px))) scale(1.15) rotate(var(--rot, 0deg)); }
+  }
+
+  /* ── 音乐按钮 ─────────────────────────── */
+  .music {
+    position: fixed; right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(255,250,241,.14); border: 1px solid rgba(255,255,255,.28);
+    color: #fff; cursor: pointer; display: grid; place-items: center;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none; transition: opacity .8s ease .3s;
+  }
+  body.opened .music { opacity: 1; pointer-events: auto; }
+  @media (max-width: 379px) {
+    .music { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  }
+  .music .ic-off { display: none; }
+  .music.muted .ic-on { display: none; }
+  .music.muted .ic-off { display: block; }
+  .music.muted { color: rgba(255,255,255,.55); }
+
+  /* ── 底部导航坞：四个篇章随时直达 ─────────────────────────── */
+  .dock {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 50;
+    display: none; gap: 2px; padding: 5px;
+    background: rgba(255,250,241,.12); border: 1px solid rgba(255,255,255,.26);
+    border-radius: 999px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(8,8,26,.45);
+  }
+  body.opened .dock { display: flex; }
+  .dock-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 50px; padding: 7px 6px 6px; border-radius: 999px;
+    text-decoration: none; color: rgba(255,255,255,.78);
+    transition: background .25s ease, color .25s ease;
+  }
+  .dock-item:hover { color: #fff; background: rgba(255,250,241,.14); }
+  .dock-item.on {
+    background: linear-gradient(135deg, #d49a9a, #c07e7e); color: #fff;
+    box-shadow: 0 4px 12px rgba(200,130,130,.4);
+  }
+  .dock-item.on:hover { background: linear-gradient(135deg, #d49a9a, #c07e7e); }
+  .d-ic { font-size: 17px; line-height: 1; }
+  .d-tx { font-size: 10px; letter-spacing: .14em; text-indent: .14em; }
+
+  /* ── 篇章子页（日常连载 / 爱心票亭）─────────────────────────── */
+  main.page-hidden { display: none; }
+  .subpage { position: relative; z-index: 10; display: none; max-width: 620px; margin: 0 auto; padding: 11vh 16px 130px; }
+  .subpage.active { display: block; animation: rise .9s ease both; }
+  .chap-head { text-align: center; color: #fff; margin-bottom: 24px; }
+  .chap-kicker { font-size: 11px; letter-spacing: .5em; text-indent: .5em; color: var(--gold); text-transform: uppercase; }
+  .chap-title { margin-top: 10px; font-size: clamp(26px, 7vw, 33px); font-weight: normal; letter-spacing: .3em; text-indent: .3em; }
+  .chap-sub { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.68); letter-spacing: .16em; }
+  .chap-meta { margin-top: 7px; font-size: 11.5px; color: rgba(255,255,255,.46); letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+
+  .chip-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+  .chip {
+    font-size: 11.5px; letter-spacing: .1em; color: rgba(255,255,255,.75);
+    background: rgba(255,250,241,.1); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px; padding: 5px 13px; font-variant-numeric: tabular-nums;
+  }
+
+  .year-mark { display: flex; align-items: center; gap: 12px; margin: 0 0 -8px; color: rgba(255,255,255,.45); font-size: 12px; letter-spacing: .5em; text-indent: .5em; }
+  .year-mark::before, .year-mark::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); }
+
+  .pe-photo {
+    margin: 14px auto 4px; max-width: 300px;
+    background: #fff; padding: 8px 8px 6px; border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(60,40,30,.18); transform: rotate(-1.6deg);
+  }
+  .diary .page-card:nth-child(even) .pe-photo { transform: rotate(1.4deg); }
+  .pe-photo img { display: block; width: 100%; border-radius: 2px; }
+  .pe-photo figcaption { padding-top: 6px; text-align: center; font-size: 11.5px; color: var(--ink-soft); letter-spacing: .1em; }
+
+  .fortune { text-align: center; padding: 22px 20px 16px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .fortune.flip { animation: flipA .5s ease; }
+  @keyframes flipA { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+  .f-title { font-size: 13px; color: #a0766e; letter-spacing: .34em; text-indent: .34em; }
+  .f-text { margin-top: 12px; font-size: 16px; line-height: 2; color: var(--ink); min-height: 2em; }
+  .f-hint { margin-top: 10px; font-size: 11px; color: rgba(138,122,109,.6); letter-spacing: .2em; }
+
+  /* ── 月亮小屋 · 生理期小日历 ─────────────────────────── */
+  .cal-card { padding: 24px 18px 18px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-title { font-size: 15.5px; color: var(--ink); letter-spacing: .18em; text-indent: .18em; }
+  .cal-nav {
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(201,138,138,.45); background: transparent; color: var(--rose-deep);
+    font-family: inherit; font-size: 16px; line-height: 1; transition: background .25s ease;
+  }
+  .cal-nav:hover { background: rgba(201,138,138,.12); }
+  .cal-nav:disabled { opacity: .3; cursor: default; background: transparent; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 14px; }
+  .cal-wd { text-align: center; font-size: 11px; color: var(--ink-soft); letter-spacing: .05em; padding: 4px 0 6px; }
+  .cal-day {
+    position: relative; aspect-ratio: 1; border: none; border-radius: 50%;
+    background: transparent; font-family: inherit; font-size: 12.5px; color: var(--ink);
+    cursor: pointer; padding: 0; font-variant-numeric: tabular-nums;
+    transition: background .15s ease;
+  }
+  .cal-day:hover { background: rgba(201,138,138,.14); }
+  .cal-day:disabled { cursor: default; }
+  .cal-day:disabled:hover { background: transparent; }
+  .cal-day.blank { visibility: hidden; }
+  .cal-day.mute { color: rgba(77,65,57,.32); }
+  .cal-day.future { color: rgba(77,65,57,.42); }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px rgba(201,138,138,.85); color: var(--rose-deep); }
+  .cal-day.marked { background: rgba(201,138,138,.24); }
+  .cal-day.marked.cap { background: rgba(201,138,138,.72); color: #fff; }
+  .cal-day.mark-open { background: rgba(201,138,138,.4); color: #fff; }
+  .cal-day.pred { border: 1.5px dashed rgba(201,138,138,.65); color: rgba(185,111,111,.85); }
+  .cal-legend { display: flex; justify-content: center; gap: 16px; margin-top: 12px; font-size: 11px; color: var(--ink-soft); letter-spacing: .06em; flex-wrap: wrap; }
+  .cal-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .cal-legend .lg-m { background: rgba(201,138,138,.72); }
+  .cal-legend .lg-p { background: transparent; border: 1.5px dashed rgba(201,138,138,.65); }
+  .cal-legend .lg-t { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(201,138,138,.85); }
+  .moon-now { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(201,138,138,.3); }
+  .moon-now-text { font-size: 12.5px; color: var(--ink-soft); line-height: 1.8; text-align: left; }
+  .btn-soft {
+    flex: 0 0 auto; font-family: inherit; cursor: pointer; border-radius: 999px;
+    border: 1px solid rgba(201,138,138,.55); background: rgba(201,138,138,.08); color: var(--rose-deep);
+    padding: 8px 18px; font-size: 12.5px; letter-spacing: .12em; text-indent: .12em; white-space: nowrap;
+    transition: background .25s ease;
+  }
+  .btn-soft:hover { background: rgba(201,138,138,.16); }
+
+  /* ── 票根墙 ─────────────────────────── */
+  .stubwall { display: flex; flex-direction: column; gap: 10px; }
+  .stub {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,250,241,.1); border: 1px dashed rgba(255,250,241,.3);
+    border-radius: 10px; padding: 10px 14px; color: rgba(255,255,255,.82); font-size: 13px; line-height: 1.8;
+  }
+  .stub .st-ic { flex: 0 0 auto; font-size: 15px; }
+  .stub .st-date { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: rgba(255,255,255,.5); letter-spacing: .08em; font-size: 11.5px; }
+  .stub-empty {
+    border: 1.5px dashed rgba(255,250,241,.3); border-radius: 12px; padding: 18px;
+    text-align: center; color: rgba(255,255,255,.5); font-size: 12.5px; letter-spacing: .1em; line-height: 2;
+  }
+
+  .cross-chip {
+    display: table; margin: 24px auto 0; padding: 10px 24px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.28); background: rgba(255,250,241,.08);
+    color: rgba(255,255,255,.78); font-size: 13px; letter-spacing: .18em; text-indent: .18em;
+    text-decoration: none; transition: background .3s ease;
+  }
+  .cross-chip:hover { background: rgba(255,250,241,.16); }
+
+  /* ── 日常连载 ─────────────────────────── */
+  .diary { display: flex; flex-direction: column; gap: 24px; }
+  .page-card {
+    position: relative; background: var(--paper); border-radius: 14px;
+    padding: 24px 20px 16px;
+    box-shadow: 0 16px 38px rgba(8,8,26,.42);
+    background-image: radial-gradient(rgba(120,90,60,.045) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .diary .page-card:nth-child(odd) { transform: rotate(-.65deg); }
+  .diary .page-card:nth-child(even) { transform: rotate(.55deg); }
+  .pe-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .pe-date { font-size: 12.5px; color: var(--ink-soft); letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+  .pe-mood { font-size: 17px; }
+  .pe-title { margin-top: 9px; font-size: 17.5px; font-weight: normal; color: var(--ink); letter-spacing: .06em; }
+  .pe-text { margin-top: 8px; font-size: 15px; line-height: 2.02; color: var(--ink); text-align: justify; }
+  .pe-sig { margin-top: 10px; text-align: right; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .1em; }
+  .page-card.ghost {
+    background: none; background-image: none; box-shadow: none;
+    border: 1.5px dashed rgba(255,250,241,.34);
+    text-align: center; padding: 28px 20px;
+  }
+  .ghost .g-title { font-size: 14.5px; color: rgba(255,255,255,.62); letter-spacing: .26em; text-indent: .26em; }
+  .ghost .g-sub { margin-top: 9px; font-size: 12.5px; line-height: 2; color: rgba(255,255,255,.42); letter-spacing: .08em; }
+  .tbc { text-align: center; margin-top: 26px; color: rgba(255,255,255,.55); font-size: 13px; letter-spacing: .5em; text-indent: .5em; }
+  .tbc-dots { display: inline-block; animation: blink 1.8s ease-in-out infinite; }
+
+  /* ── 爱心票亭 ─────────────────────────── */
+  .pocket { margin-top: 28px; }
+  .pocket-head { display: flex; align-items: center; gap: 12px; color: #fff; margin-bottom: 12px; }
+  .pocket-name { font-size: 15px; letter-spacing: .26em; text-indent: .26em; }
+  .pocket-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.32), transparent); }
+  .pocket-count { font-size: 11.5px; color: rgba(255,255,255,.5); letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+  .tickets { display: flex; flex-direction: column; gap: 15px; }
+  .ticket {
+    position: relative; display: flex; background: var(--paper); border-radius: 14px;
+    box-shadow: 0 14px 30px rgba(8,8,26,.4); cursor: pointer; user-select: none;
+    transition: transform .15s ease;
+    -webkit-user-select: none;
+  }
+  .ticket:active { transform: scale(.982); }
+  .ticket.wiggle { animation: wiggleA .55s ease; }
+  @keyframes wiggleA {
+    0% { transform: rotate(0); } 25% { transform: rotate(-1.3deg); }
+    55% { transform: rotate(1deg); } 100% { transform: rotate(0); }
+  }
+  .ticket::before, .ticket::after {
+    content: ""; position: absolute; left: 84px; transform: translateX(-50%);
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #2b2a52; box-shadow: inset 0 1.5px 3px rgba(0,0,0,.4);
+  }
+  .ticket::before { top: -6.5px; }
+  .ticket::after { bottom: -6.5px; }
+  .tk-stub {
+    flex: 0 0 84px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 7px; padding: 16px 6px; border-right: 2px dashed rgba(201,138,138,.5);
+    border-radius: 14px 0 0 14px; background: rgba(201,138,138,.08);
+  }
+  .tk-icon { font-size: 26px; line-height: 1; }
+  .tk-no { font-size: 10px; color: var(--ink-soft); letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+  .tk-body { flex: 1; padding: 15px 16px 13px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .tk-name { font-size: 16px; color: var(--ink); letter-spacing: .05em; }
+  .tk-note { font-size: 12.5px; line-height: 1.85; color: var(--ink-soft); }
+  .tk-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+  .tk-count { font-size: 12.5px; color: var(--rose-deep); letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+  .tk-valid { font-size: 10.5px; color: rgba(138,122,109,.62); letter-spacing: .12em; }
+  .ticket.used { filter: saturate(.5); }
+  .ticket.used .tk-stub, .ticket.used .tk-body { opacity: .78; }
+  .tk-stamp {
+    position: absolute; right: 12px; top: 50%; z-index: 2;
+    transform: translateY(-50%) rotate(-11deg);
+    border: 2.5px solid rgba(185,111,111,.8); border-radius: 9px;
+    color: rgba(185,111,111,.92); background: rgba(255,250,241,.55);
+    font-size: 13px; letter-spacing: .3em; text-indent: .3em; padding: 5px 9px 5px 12px;
+  }
+  .tk-rules { margin-top: 32px; text-align: center; color: rgba(255,255,255,.58); font-size: 12.5px; line-height: 2.2; letter-spacing: .08em; }
+  .tk-rules b { font-weight: normal; color: rgba(255,255,255,.82); letter-spacing: .2em; }
+
+  /* ── 月亮小屋（生理期小日历）─────────────────────────── */
+  .moon-hint { text-align: center; margin: 14px auto 0; font-size: 12px; color: rgba(255,250,241,.55); letter-spacing: .08em; line-height: 1.9; }
+  .moon-hint:empty { display: none; }
+  .moon-recs { display: flex; flex-direction: column; gap: 10px; }
+  .rec {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px;
+    background: var(--paper); border-radius: 12px; padding: 12px 14px;
+    box-shadow: 0 10px 24px rgba(8,8,26,.38);
+    font-size: 13.5px; color: var(--ink);
+  }
+  .rec .r-main { flex: 1 1 auto; line-height: 1.7; font-variant-numeric: tabular-nums; }
+  .rec .r-tag {
+    flex: 0 0 auto; font-size: 11px; color: #a0766e; letter-spacing: .08em;
+    background: rgba(201,138,138,.1); border: 1px dashed rgba(201,138,138,.4);
+    border-radius: 999px; padding: 3px 10px; font-variant-numeric: tabular-nums;
+  }
+  .rec .r-tag.open { color: #8a6a48; background: rgba(212,180,131,.16); border-color: rgba(212,180,131,.55); }
+  .rec .r-fix {
+    flex: 0 0 auto; display: none; font-family: inherit; cursor: pointer;
+    background: transparent; border: 1px solid rgba(201,138,138,.5); color: var(--rose-deep);
+    border-radius: 999px; padding: 4px 13px; font-size: 12px; letter-spacing: .1em;
+  }
+  #page-moon.editing .r-fix { display: inline-block; }
+  .rec-empty {
+    border: 1.5px dashed rgba(255,250,241,.34); border-radius: 12px; padding: 16px;
+    text-align: center; color: rgba(255,255,255,.55); font-size: 12.5px; letter-spacing: .1em; line-height: 2;
+  }
+  .moon-tools { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+  .btn-moon-edit {
+    font-family: inherit; cursor: pointer; background: rgba(255,250,241,.1);
+    border: 1px solid rgba(255,250,241,.32); color: rgba(255,255,255,.82);
+    border-radius: 999px; padding: 8px 22px; font-size: 12.5px; letter-spacing: .18em; text-indent: .18em;
+    transition: background .25s ease;
+  }
+  .btn-moon-edit:hover { background: rgba(255,250,241,.18); }
+  .moon-note { text-align: center; margin-top: 16px; font-size: 11.5px; color: rgba(255,255,255,.5); line-height: 2.1; letter-spacing: .06em; }
+
+  /* ── 确认弹层 & 撤销提示 ─────────────────────────── */
+  .sheet-mask {
+    position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(10,10,30,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  .sheet-mask.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: min(430px, 100%); background: var(--paper); border-radius: 20px 20px 0 0;
+    padding: 24px 22px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -18px 50px rgba(8,8,26,.5);
+    transform: translateY(36px); transition: transform .32s ease;
+  }
+  .sheet-mask.show .sheet { transform: none; }
+  .sheet-title { text-align: center; font-size: 17px; color: var(--ink); letter-spacing: .12em; }
+  .sheet-sub { text-align: center; margin-top: 8px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.9; }
+  .sheet-sub:empty { display: none; }
+  .sheet-dates { display: flex; gap: 14px; justify-content: center; margin-top: 16px; }
+  .sheet-dates label { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-soft); letter-spacing: .1em; }
+  .sheet-dates input[type="date"] {
+    font-family: inherit; font-size: 15px; color: var(--ink); text-align: center;
+    border: 1px dashed rgba(201,138,138,.5); background: rgba(255,255,255,.6);
+    border-radius: 10px; padding: 8px 10px; outline: none;
+  }
+  .sheet-dates input[type="date"]:focus { border-color: rgba(201,138,138,.9); }
+  .sheet-textarea {
+    width: 100%; margin-top: 14px; resize: vertical; min-height: 84px;
+    font-family: inherit; font-size: 12.5px; line-height: 1.7; color: var(--ink);
+    background: rgba(255,255,255,.6); border: 1px dashed rgba(201,138,138,.45);
+    border-radius: 10px; padding: 10px 12px; outline: none;
+  }
+  .sheet-warn { text-align: center; margin-top: 12px; font-size: 12.5px; color: #b3555e; line-height: 1.9; }
+  .sheet-warn:empty { display: none; }
+  .sheet-btns { display: flex; gap: 13px; justify-content: center; margin-top: 18px; }
+  .sheet-btns .btn { padding: 11px 30px; font-size: 15px; }
+  .btn-sheet-yes {
+    background: linear-gradient(135deg, #d49a9a, #c07e7e); color: #fff;
+    box-shadow: 0 8px 22px rgba(200,130,130,.42);
+  }
+  .btn-sheet-yes:disabled { opacity: .45; box-shadow: none; cursor: default; }
+  .btn-sheet-no { background: transparent; color: var(--ink-soft); border: 1px solid rgba(90,75,65,.35); }
+  .btn-sheet-del { background: transparent; color: #b3555e; border: 1px solid rgba(179,85,94,.45); }
+  .undo-toast {
+    position: fixed; left: 50%; transform: translateX(-50%) translateY(8px);
+    bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 65;
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(38,34,58,.94); color: rgba(255,255,255,.9);
+    border: 1px solid rgba(255,255,255,.2); border-radius: 999px;
+    padding: 10px 12px 10px 20px; font-size: 13px; letter-spacing: .08em;
+    box-shadow: 0 12px 30px rgba(8,8,26,.5);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease, transform .3s ease;
+    max-width: calc(100vw - 32px);
+  }
+  .undo-toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  .undo-toast button {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 999px;
+    background: rgba(212,180,131,.22); color: #e8cf9e; padding: 6px 16px; font-size: 12.5px; letter-spacing: .14em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="sky"><div class="moon"></div></div>
+
+<!-- 开场：雨霖之家 -->
+<div id="intro">
+  <p class="intro-kicker">Welcome Home</p>
+  <h1 class="intro-title">雨 霖 之 家</h1>
+  <p class="intro-sub">欢迎来到雨霖之家</p>
+  <div class="door-plate">♥ 雨含 &amp; 小汤 的家 ♥</div>
+  <div class="door-wrap">
+    <div class="door-float">
+      <div class="door" id="door" role="button" tabindex="0" aria-label="推开家门">
+        <div class="door-frame">
+          <div class="door-glow"></div>
+          <div class="door-panel l"><span class="heart">♥</span><span class="knob"></span></div>
+          <div class="door-panel r"><span class="heart">♥</span><span class="knob"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="door-shadow"></div>
+  <p class="intro-hint">轻轻推开门，进来吧</p>
+</div>
+
+<!-- 信 -->
+<main id="letter">
+  <div class="paper">
+    <span class="tape"></span>
+    <p class="writedate" id="writedate"></p>
+    <h1 class="greet"><span id="typeTarget"></span><span class="caret" id="caret"></span></h1>
+
+    <div class="sec">
+      <p>见字如面。</p>
+      <p>有些话当面说总觉得难为情，所以我把它写下来，藏在这封信里。你知道的，我本来就不爱说话，总喜欢一个人闷头做自己擅长的事，一忙起来难免冷落你。但那从来不是不爱你，也不是不愿跟你分享——我的行动，永远大于我的言语。这一点，希望你早就从那些细枝末节里，稳稳读懂了。</p>
+    </div>
+
+    <div class="counter" id="counter">
+      <p class="counter-label">这是我们在一起的第</p>
+      <p class="counter-num"><span class="n" id="daysNum">–</span><span class="unit">天</span></p>
+      <p class="counter-clock" id="clock">00:00:00</p>
+      <p class="counter-sub">连秒针都在替我数着想你的时间。</p>
+    </div>
+
+    <div class="divider"><span class="line"></span><svg width="12" height="11" viewBox="0 0 12 11" aria-hidden="true"><path fill="#c98a8a" d="M6 10.5 1.6 6.1a3 3 0 0 1 0-4.2 3 3 0 0 1 4.2 0l.2.2.2-.2a3 3 0 0 1 4.2 0 3 3 0 0 1 0 4.2Z"/></svg><span class="line"></span></div>
+
+    <div class="sec reveal">
+      <h2 class="sec-title">关于喜欢</h2>
+      <p>我很多的快乐都很小，小到说出口你可能会笑：是你回消息时那句「在呀宝宝」，是你笑起来弯弯的眼睛和可爱的小嘴巴，是你运动时那份闪闪发光的决心与陪伴。</p>
+      <p>但我后来才明白，这些小事加起来，有一个名字——叫「有你真好」。你在认真变好，我在认真喜欢你，日子就这样一天天亮了起来。</p>
+    </div>
+
+    <div class="sec reveal">
+      <h2 class="sec-title">一些小事</h2>
+      <ul class="mini">
+        <li>喜欢你认真吃饭的样子，好像全世界的饭都好吃</li>
+        <li>喜欢你被我逗笑，又憋着假装生气的样子</li>
+        <li>喜欢你说的一句句「早安」「晚安」——就算我偶尔忘了说，心里那句「再多陪我一会儿」，也从来没停过</li>
+        <li>喜欢你叫我名字的时候，尾音都是软的</li>
+      </ul>
+    </div>
+
+    <div class="divider reveal"><span class="line"></span><svg width="12" height="11" viewBox="0 0 12 11" aria-hidden="true"><path fill="#c98a8a" d="M6 10.5 1.6 6.1a3 3 0 0 1 0-4.2 3 3 0 0 1 4.2 0l.2.2.2-.2a3 3 0 0 1 4.2 0 3 3 0 0 1 0 4.2Z"/></svg><span class="line"></span></div>
+
+    <div class="sec reveal">
+      <h2 class="sec-title">想答应你的事</h2>
+      <ul class="promise">
+        <li>你随口提过的事，我都悄悄记着</li>
+        <li>把「多喝热水」，换成真的出现在你面前</li>
+        <li>你难过的时候，肩膀和怀抱都给你留着</li>
+        <li>把你放进我以后每一个计划的最前面</li>
+      </ul>
+      <p>这些事听起来都很小，但我想用接下来的每一天，慢慢做给你看。</p>
+    </div>
+
+    <section class="sec reveal" id="widgetSec">
+      <h2 class="sec-title">解压小物</h2>
+      <p class="w-lead">不开心的时候，就来这里待一会儿。</p>
+      <div class="widgets">
+        <div class="widget">
+          <p class="w-title">减压泡泡纸</p>
+          <div class="bubblewrap" id="bubblewrap"></div>
+          <p class="wstat" id="bwStat"></p>
+          <button class="btn-refill" id="bwRefill" hidden>再来一版</button>
+        </div>
+        <div class="widget">
+          <p class="w-title">软软捏捏乐</p>
+          <div class="squishy-wrap">
+            <div class="squishy" id="squishy">
+              <span class="eye l"></span><span class="eye r"></span>
+              <span class="blush l"></span><span class="blush r"></span>
+              <span class="mouth"></span>
+            </div>
+            <span class="squish-word" id="squishWord"></span>
+          </div>
+          <p class="wstat" id="sqStat">已捏 0 下</p>
+        </div>
+        <div class="widget widget-wide">
+          <p class="w-title">指尖小烟花</p>
+          <div class="spark-wrap">
+            <canvas id="sparkCanvas"></canvas>
+            <p class="spark-hint" id="sparkHint">✦ 用指尖在这里画星星 ✦</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider reveal"><span class="line"></span><svg width="12" height="11" viewBox="0 0 12 11" aria-hidden="true"><path fill="#c98a8a" d="M6 10.5 1.6 6.1a3 3 0 0 1 0-4.2 3 3 0 0 1 4.2 0l.2.2.2-.2a3 3 0 0 1 4.2 0 3 3 0 0 1 0 4.2Z"/></svg><span class="line"></span></div>
+
+    <section class="question reveal" id="question">
+      <p class="q-lead">最后，是一个我早就知道答案、却还是想每天都问一遍的问题</p>
+      <h2 class="q-title">蒋雨含小宝，<br>愿意一直做我的宝贝吗？</h2>
+      <div class="btns">
+        <button class="btn btn-yes" id="btnYes">我愿意</button>
+        <button class="btn btn-no" id="btnNo">再想想</button>
+      </div>
+    </section>
+
+    <section class="final" id="final">
+      <h2 class="q-title" id="finalTitle"></h2>
+      <p class="sec" style="text-align:center">从这一秒起，我的喜欢又厚了一点。<br>会好好吃饭、好好睡觉、好好爱你——<br>尤其是最后一件。</p>
+      <p class="ps-note">（悄悄说：这封信会一直留在这里，<br>想你的时候，就回来再拆一次。）</p>
+    </section>
+
+    <div class="divider reveal"><span class="line"></span><svg width="12" height="11" viewBox="0 0 12 11" aria-hidden="true"><path fill="#c98a8a" d="M6 10.5 1.6 6.1a3 3 0 0 1 0-4.2 3 3 0 0 1 4.2 0l.2.2.2-.2a3 3 0 0 1 4.2 0 3 3 0 0 1 0 4.2Z"/></svg><span class="line"></span></div>
+
+    <section class="sec reveal" id="mailboxSec">
+      <h2 class="sec-title">悄悄话信箱</h2>
+      <p class="w-lead">读完信如果也想回几句——写在这里，它会稳稳落到骑士手里。</p>
+      <form class="mailbox">
+        <textarea id="msgText" name="message" maxlength="500" placeholder="想对我说的话，写在这里…"></textarea>
+        <div class="msg-row">
+          <span class="msg-count" id="msgCount">0/500</span>
+          <button type="submit" class="btn-send" id="msgSend">寄 出</button>
+        </div>
+        <p class="msg-tip" id="msgTip"></p>
+      </form>
+    </section>
+
+    <p class="signature" id="signature">—— 一个很爱很爱你的小汤骑士</p>
+    <p class="ps">P.S. 蒋雨含，你的名字，是我见过最好的三个字。</p>
+  </div>
+  <p class="foot">— 这封信会一直亮在这里，像今晚的星星 —</p>
+</main>
+
+<!-- 家 · 首页（封面 + 章节长滚动） -->
+<section class="subpage" id="page-home">
+  <header class="h-hero">
+    <p class="h-kicker">Welcome Home</p>
+    <h1 class="h-title">雨霖之家</h1>
+    <p class="h-sub">欢迎来到雨霖之家</p>
+    <div class="h-divider"><span class="line"></span><span style="color:var(--rose);font-size:12px">♥</span><span class="line"></span></div>
+    <div class="h-count">
+      <p class="h-count-label">这是我们在一起的第</p>
+      <p class="h-count-num"><span class="n" id="homeDaysNum">–</span><span class="unit">天</span></p>
+      <p class="h-count-clock" id="homeClock">00:00:00</p>
+    </div>
+    <span class="h-vertical">为你留一盏灯</span>
+    <div class="h-down" aria-hidden="true">↓</div>
+    <p class="h-down-tip">往下看看</p>
+  </header>
+
+  <a class="h-chap h-rv" href="#/letter">
+    <div class="hc-head"><span class="hc-no">壹</span><h2 class="hc-name">信</h2></div>
+    <p class="hc-quote">有些话当面说总觉得难为情，就写在了这里。</p>
+    <div class="h-prop prop-letter">
+      <span class="tape"></span>
+      <p class="pl-greet">见字如面</p>
+      <p class="pl-sub">一封只写给你的信</p>
+      <span class="pl-seal">♥</span>
+    </div>
+    <span class="h-enter">拆开这封信 →</span>
+  </a>
+
+  <a class="h-chap h-rv alt" href="#/daily">
+    <div class="hc-head"><span class="hc-no">贰</span><h2 class="hc-name">日常</h2></div>
+    <p class="hc-quote">小事记下来，就变成了日子。连载不定期，想你天天定刊。</p>
+    <div class="h-prop prop-polaroid">
+      <span class="pp-star">✦</span>
+      <p class="pp-cap">我们的连载 · 未完待续</p>
+    </div>
+    <span class="h-enter">去翻我们的连载 →</span>
+  </a>
+
+  <a class="h-chap h-rv" href="#/tickets">
+    <div class="hc-head"><span class="hc-no">叁</span><h2 class="hc-name">票亭</h2></div>
+    <p class="hc-quote">凭券兑换，长期有效。想要什么新券，告诉小汤一声，马上印。</p>
+    <div class="h-prop prop-ticket">
+      <div class="pt-stub"><span class="pt-ic">🎟️</span><span class="pt-no">NO.01</span></div>
+      <div class="pt-body"><p class="pt-name">爱心票亭</p><p class="pt-sub">凭券兑换 · 长期有效</p></div>
+    </div>
+    <span class="h-enter">进票亭看看 →</span>
+  </a>
+
+  <a class="h-chap h-rv alt" href="#/moon">
+    <div class="hc-head"><span class="hc-no">肆</span><h2 class="hc-name">月亮小屋</h2></div>
+    <p class="hc-quote">一个月一个月，慢慢记下去。</p>
+    <div class="h-prop prop-moon">
+      <span class="pm-moon"></span>
+      <p class="pm-state" id="liveMoon">🌙 还没有标记</p>
+    </div>
+    <span class="h-enter">推开月亮小屋的门 →</span>
+  </a>
+
+  <footer class="h-foot h-rv">
+    <div class="h-divider"><span class="line"></span><span style="color:var(--rose);font-size:12px">♥</span><span class="line"></span></div>
+    <p class="h-foot-line">想我们的时候，随便推一扇门进来。</p>
+    <p class="h-foot-moon" id="chipHomeMoon"></p>
+  </footer>
+</section>
+
+<!-- 篇章 · 月亮小屋（生理期小日历） -->
+<section class="subpage" id="page-moon">
+  <header class="chap-head">
+    <p class="chap-kicker">Moon House</p>
+    <h1 class="chap-title">月亮小屋</h1>
+    <p class="chap-sub">生理期小日历 · 一个月一个月，慢慢记下去</p>
+    <p class="chap-meta" id="moonMeta"></p>
+    <div class="chip-row" id="moonChips"></div>
+  </header>
+  <div class="page-card cal-card">
+    <span class="tape"></span>
+    <div class="cal-head">
+      <button class="cal-nav" id="calPrev" aria-label="上个月">‹</button>
+      <p class="cal-title" id="calTitle"></p>
+      <button class="cal-nav" id="calNext" aria-label="下个月">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend"><span><i class="lg-m"></i>来访的日子</span><span><i class="lg-p"></i>预计的日子</span><span><i class="lg-t"></i>今天</span></div>
+    <div class="moon-now">
+      <p class="moon-now-text" id="moonNowText"></p>
+      <button class="btn-soft" id="moonNowBtn"></button>
+    </div>
+  </div>
+  <p class="moon-hint" id="moonHint"></p>
+  <div class="pocket">
+    <div class="pocket-head"><span class="pocket-name">过往记录</span><span class="pocket-line"></span><span class="pocket-count" id="moonCount"></span></div>
+    <div class="moon-recs" id="moonRecs"></div>
+    <div class="moon-tools">
+      <button class="btn-moon-edit" id="moonEditBtn">修正记录</button>
+      <button class="btn-moon-edit" id="moonBackupBtn" hidden>备份 / 导入</button>
+    </div>
+  </div>
+  <p class="moon-note">点日历上的任何一天就能记：来的第一天、走的那天，都能标、能改、能删。<br>记录只存在这台手机的浏览器里，不上传；换手机前先用「备份 / 导入」存一串备份码。</p>
+  <a class="cross-chip" href="#/">🏠 回家</a>
+</section>
+
+<!-- 篇章 · 日常连载（第二章） -->
+<section class="subpage" id="page-daily">
+  <header class="chap-head">
+    <p class="chap-kicker">Chapter Ⅱ</p>
+    <h1 class="chap-title">我们的日常</h1>
+    <p class="chap-sub">小事记下来，就变成了日子</p>
+    <p class="chap-meta" id="diaryMeta"></p>
+    <div class="chip-row">
+      <span class="chip" id="chipAnniv"></span>
+      <span class="chip" id="chipMoon"></span>
+    </div>
+  </header>
+  <div class="diary" id="diaryList"></div>
+  <p class="tbc">未完待续<span class="tbc-dots">…</span></p>
+  <div class="diary" style="margin-top: 24px;">
+    <div class="page-card fortune" id="fortuneCard" role="button" aria-label="换一句情话签">
+      <span class="tape"></span>
+      <p class="f-title">今日情话签</p>
+      <p class="f-text" id="fortuneText"></p>
+      <p class="f-hint">— 点一下，换一句 —</p>
+    </div>
+  </div>
+  <a class="cross-chip" href="#/tickets">🎟️ 顺便去票亭转转</a>
+</section>
+
+<!-- 篇章 · 爱心票亭（番外） -->
+<section class="subpage" id="page-tickets">
+  <header class="chap-head">
+    <p class="chap-kicker">Extra · 番外</p>
+    <h1 class="chap-title">爱心票亭</h1>
+    <p class="chap-sub">凭券兑换 · 长期有效 · 最终解释权归彼此</p>
+    <p class="chap-meta" id="tkTotal"></p>
+  </header>
+  <div class="pocket">
+    <div class="pocket-head"><span class="pocket-name">汤的票夹</span><span class="pocket-line"></span><span class="pocket-count" id="tkc-t"></span></div>
+    <div class="tickets" id="tk-t"></div>
+  </div>
+  <div class="pocket">
+    <div class="pocket-head"><span class="pocket-name">雨含的票夹</span><span class="pocket-line"></span><span class="pocket-count" id="tkc-y"></span></div>
+    <div class="tickets" id="tk-y"></div>
+  </div>
+  <div class="pocket">
+    <div class="pocket-head"><span class="pocket-name">票根墙</span><span class="pocket-line"></span><span class="pocket-count" id="tkLogCount"></span></div>
+    <div class="stubwall" id="stubWall"></div>
+  </div>
+  <p class="tk-rules">
+    <b>兑券须知</b><br>
+    一、出示本券，即视为正式发起一次浪漫行为<br>
+    二、每张券限用一次，用完作废，不找零、不转赠<br>
+    三、用掉的券、想要的新券，告诉小汤一声，票亭马上印
+  </p>
+  <a class="cross-chip" href="#/daily">📖 回日常连载看看</a>
+</section>
+
+<button class="music" id="musicBtn" aria-label="音乐开关">
+  <svg class="ic-on" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/></svg>
+  <svg class="ic-off" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><line x1="3.5" y1="20.5" x2="20.5" y2="3.5"/></svg>
+</button>
+
+<nav class="dock" id="dock" aria-label="板块导航">
+  <a class="dock-item" href="#/" data-route="home"><span class="d-ic" aria-hidden="true">🏠</span><span class="d-tx">家</span></a>
+  <a class="dock-item" href="#/letter" data-route="letter"><span class="d-ic" aria-hidden="true">💌</span><span class="d-tx">信</span></a>
+  <a class="dock-item" href="#/daily" data-route="daily"><span class="d-ic" aria-hidden="true">📖</span><span class="d-tx">日常</span></a>
+  <a class="dock-item" href="#/tickets" data-route="tickets"><span class="d-ic" aria-hidden="true">🎟️</span><span class="d-tx">票亭</span></a>
+  <a class="dock-item" href="#/moon" data-route="moon"><span class="d-ic" aria-hidden="true">🌙</span><span class="d-tx">月亮</span></a>
+</nav>
+
+<!-- 确认弹层（防误触：所有会改记录的操作都要在这里再确认一次） -->
+<div class="sheet-mask" id="sheetMask" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <p class="sheet-title" id="sheetTitle"></p>
+    <p class="sheet-sub" id="sheetSub"></p>
+    <div class="sheet-dates" id="sheetDates"></div>
+    <textarea class="sheet-textarea" id="sheetText" rows="4" spellcheck="false" hidden></textarea>
+    <p class="sheet-warn" id="sheetWarn"></p>
+    <div class="sheet-btns">
+      <button class="btn btn-sheet-no" id="sheetNo">再想想</button>
+      <button class="btn btn-sheet-del" id="sheetDel" hidden>删 掉</button>
+      <button class="btn btn-sheet-yes" id="sheetYes">记好了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 撤销提示（可逆操作：先记下，给 6 秒反悔时间） -->
+<div class="undo-toast" id="undoToast" role="status">
+  <span id="undoMsg"></span>
+  <button id="undoBtn" hidden>撤销</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  /* ⭐️⭐️⭐️ 只需要改这里 ⭐️⭐️⭐️ */
+  var START_DATE  = '2021-11-19';        // 你们在一起的日子，格式 '年-月-日'
+  var SIGNATURE   = '一个很爱很爱你的小汤骑士';  // 落款，可以换成你的名字
+  var HIDE_COUNTER = false;               // 不想显示天数，就改成 true
+  var FORMINIT_ID  = '';                  // 悄悄话信箱的 Forminit 表单 ID（在 app.forminit.com 后台复制）
+  /* ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️ */
+
+  var $ = function (s) { return document.querySelector(s); };
+  var sky = $('#sky');
+
+  /* ── 星空 ── */
+  (function () {
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < 85; i++) {
+      var s = document.createElement('span');
+      s.className = 'star';
+      var size = (Math.random() * 1.7 + .8).toFixed(1);
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = (Math.random() * 100).toFixed(2) + '%';
+      s.style.top = (Math.random() * 78).toFixed(2) + '%';
+      s.style.setProperty('--d', (Math.random() * 2.4 + 1.6).toFixed(2) + 's');
+      s.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+      frag.appendChild(s);
+    }
+    sky.appendChild(frag);
+  })();
+  function shooting() {
+    var s = document.createElement('div');
+    s.className = 'shooting';
+    s.style.left = (52 + Math.random() * 40) + '%';
+    s.style.top = (3 + Math.random() * 22) + '%';
+    sky.appendChild(s);
+    setTimeout(function () { s.remove(); }, 1400);
+  }
+  setTimeout(function () { shooting(); }, 2600);
+  setInterval(function () { if (Math.random() < .7) shooting(); }, 7000);
+
+  /* ── 音乐：温柔版卡农（D 大调，慢速音乐盒） ── */
+  var actx = null, master = null, playing = false, loopTimer = null;
+  var BPM = 52, BEAT = 60 / BPM, LOOP = 64 * BEAT;
+  var M = { D3:146.83, Fs3:185.00, G3:196.00, A3:220.00, B3:246.94,
+            Cs4:277.18, D4:293.66, E4:329.63, Fs4:369.99, G4:392.00,
+            A4:440.00, B4:493.88, Cs5:554.37, D5:587.33, E5:659.25,
+            Fs5:739.99, G5:783.99, C6:1046.50 };
+  /* 前八小节：分解和弦轻轻铺垫；后八小节：卡农主旋律进来 */
+  var BARS = [
+    { r:'D3',  a:['D3','Fs3','A3','Fs3'] },
+    { r:'A3',  a:['A3','Cs4','E4','Cs4'] },
+    { r:'B3',  a:['B3','D4','Fs4','D4'] },
+    { r:'Fs3', a:['Fs3','A3','Cs4','A3'] },
+    { r:'G3',  a:['G3','B3','D4','B3'] },
+    { r:'D3',  a:['D3','Fs3','A3','Fs3'] },
+    { r:'G3',  a:['G3','B3','D4','B3'] },
+    { r:'A3',  a:['A3','Cs4','E4','Cs4'] }
+  ];
+  var canon = ['Fs5','E5','D5','Cs5','B4','A4','B4','Cs5',
+               'D5','Cs5','B4','A4','G4','Fs4','G4','E4'];
+  function initAudio() {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    master = actx.createGain();
+    master.gain.value = 0.42;
+    var lp = actx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1800;
+    master.connect(lp); lp.connect(actx.destination);
+  }
+  function note(t, f, dur, vol) {
+    var o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    var g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + .1);
+  }
+  function scheduleLoop(t0) {
+    BARS.forEach(function (bar, i) {
+      var tb = t0 + i * 4 * BEAT;
+      note(tb, M[bar.r], 4 * BEAT * .92, .07);
+      bar.a.forEach(function (n, k) { note(tb + k * BEAT, M[n], BEAT * 1.7, .11); });
+    });
+    BARS.forEach(function (bar, i) {
+      var tb = t0 + (8 + i) * 4 * BEAT;
+      note(tb, M[bar.r], 4 * BEAT * .92, .07);
+      note(tb + 2 * BEAT, M[bar.a[2]], 2 * BEAT * .9, .05);
+    });
+    canon.forEach(function (n, i) { note(t0 + (32 + i * 2) * BEAT, M[n], 2 * BEAT * .95, .16); });
+    var wait = (t0 + LOOP - 0.3 - actx.currentTime) * 1000;
+    loopTimer = setTimeout(function () { if (playing) scheduleLoop(t0 + LOOP); }, Math.max(wait, 60));
+  }
+  function startLoop() {
+    if (!actx) initAudio();
+    playing = true;
+    actx.resume();
+    master.gain.cancelScheduledValues(actx.currentTime);
+    master.gain.setValueAtTime(0.42, actx.currentTime);
+    scheduleLoop(actx.currentTime + 0.2);
+  }
+  function stopLoop() {
+    playing = false;
+    clearTimeout(loopTimer);
+    if (master) master.gain.setTargetAtTime(0.0001, actx.currentTime, .2);
+    setTimeout(function () { if (!playing && actx) { actx.close(); actx = null; master = null; } }, 1000);
+  }
+  function chime() {
+    if (!actx) initAudio();
+    actx.resume();
+    var t = actx.currentTime + .02;
+    [M.G4, M.E5, M.G5, M.C6].forEach(function (f, i) { note(t + i * .12, f, 1.3, .13); });
+  }
+  var musicBtn = $('#musicBtn');
+  musicBtn.addEventListener('click', function () {
+    if (playing) { stopLoop(); musicBtn.classList.add('muted'); }
+    else { startLoop(); musicBtn.classList.remove('muted'); }
+  });
+
+  /* ── 打字机 ── */
+  function typewrite(el, text, speed, done) {
+    el.textContent = '';
+    var i = 0;
+    var t = setInterval(function () {
+      el.textContent += text[i++];
+      if (i >= text.length) { clearInterval(t); done && done(); }
+    }, speed);
+  }
+
+  /* ── 天数计数 ── */
+  var start = new Date(START_DATE + 'T00:00:00');
+  var counter = $('#counter');
+  if (HIDE_COUNTER || isNaN(start.getTime())) { counter.style.display = 'none'; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var ms = Date.now() - start.getTime();
+    if (ms < 0) return;
+    var d = Math.floor(ms / 864e5); ms -= d * 864e5;
+    var h = Math.floor(ms / 36e5), m = Math.floor(ms % 36e5 / 6e4), s = Math.floor(ms % 6e4 / 1e3);
+    $('#daysNum').textContent = d.toLocaleString('zh-CN');
+    $('#clock').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+  }
+  if (!HIDE_COUNTER && !isNaN(start.getTime())) { tick(); setInterval(tick, 1000); }
+
+  /* ── 落款 & 日期 ── */
+  $('#signature').textContent = '—— ' + SIGNATURE;
+  var now = new Date();
+  $('#writedate').textContent = '写于 ' + now.getFullYear() + ' 年 ' + (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日 · 一个想你的晚上';
+
+  /* ── 小心心 ── */
+  var heartColors = ['#d98e8e', '#e8b4b8', '#d4b483', '#c98a8a'];
+  function spawnHeart(x, y, spread) {
+    var s = document.createElement('span');
+    s.className = 'fly-heart';
+    s.textContent = '♥';
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    s.style.color = heartColors[Math.floor(Math.random() * heartColors.length)];
+    s.style.fontSize = (10 + Math.random() * (spread ? 12 : 9)) + 'px';
+    s.style.setProperty('--dx', (Math.random() * (spread ? 240 : 52) - (spread ? 120 : 26)).toFixed(0) + 'px');
+    s.style.setProperty('--dy', (spread ? (Math.random() * 180 - 150) : (-80 - Math.random() * 40)).toFixed(0) + 'px');
+    s.style.setProperty('--rot', (Math.random() * 44 - 22).toFixed(0) + 'deg');
+    document.body.appendChild(s);
+    setTimeout(function () { s.remove(); }, 1500);
+  }
+  var moonEl = document.querySelector('.moon');
+  function moonWink() {
+    moonEl.classList.remove('wink');
+    void moonEl.offsetWidth;
+    moonEl.classList.add('wink');
+    shooting();
+    setTimeout(shooting, 320);
+    try {
+      if (!actx) initAudio();
+      if (actx.state === 'suspended') actx.resume();
+      var t = actx.currentTime;
+      note(t, M.G5, 1, .09); note(t + .12, M.E5, 1.2, .07);
+    } catch (err) {}
+  }
+  document.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button, a, .door, .ticket, .fortune')) return;
+    if (moonEl) {
+      var mr = moonEl.getBoundingClientRect();
+      if (mr.width && e.clientX >= mr.left && e.clientX <= mr.right && e.clientY >= mr.top && e.clientY <= mr.bottom) {
+        var pr = document.querySelector('.paper').getBoundingClientRect();
+        var mcx = mr.left + mr.width / 2, mcy = mr.top + mr.height / 2;
+        if (!(mcx > pr.left && mcx < pr.right && mcy > pr.top && mcy < pr.bottom)) { moonWink(); return; }
+      }
+    }
+    spawnHeart(e.clientX, e.clientY, false);
+  });
+
+  /* ── 推门进家 ── */
+  var opened = false;
+  var door = $('#door');
+  var letterEntered = false;
+  function enterLetter() {
+    if (letterEntered) return;
+    letterEntered = true;
+    setTimeout(function () {
+      typewrite($('#typeTarget'), '亲爱的雨含：', 130, function () {
+        setTimeout(function () { $('#caret').classList.add('off'); }, 2600);
+      });
+    }, 350);
+  }
+  function openDoor() {
+    if (opened) return;
+    opened = true;
+    door.classList.add('open');
+    startLoop();
+    setTimeout(function () {
+      document.body.classList.add('opened');
+      $('#letter').classList.add('show');
+      window.scrollTo(0, 0);
+      renderRoute();
+      var reveals = document.querySelectorAll('.reveal');
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add('in');
+            io.unobserve(en.target);
+            if (en.target.id === 'widgetSec') initSpark();
+          }
+        });
+      }, { threshold: .12 });
+      reveals.forEach(function (el) { io.observe(el); });
+      var hrvs = document.querySelectorAll('.h-rv');
+      var hio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add('in');
+            hio.unobserve(en.target);
+          }
+        });
+      }, { threshold: .08 });
+      hrvs.forEach(function (el) { hio.observe(el); });
+    }, 1250);
+  }
+  door.addEventListener('click', openDoor);
+  door.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDoor(); }
+  });
+
+  /* ── 解压小物 ── */
+  function popSound() {
+    try {
+      if (!actx) initAudio();
+      if (actx.state === 'suspended') actx.resume();
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(520 + Math.random() * 360, t);
+      o.frequency.exponentialRampToValueAtTime(90, t + .09);
+      g.gain.setValueAtTime(.22, t);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .1);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + .12);
+    } catch (err) {}
+  }
+  function squeakSound() {
+    try {
+      if (!actx) initAudio();
+      if (actx.state === 'suspended') actx.resume();
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(280 + Math.random() * 60, t);
+      o.frequency.exponentialRampToValueAtTime(520 + Math.random() * 80, t + .1);
+      g.gain.setValueAtTime(.12, t);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .14);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + .16);
+    } catch (err) {}
+  }
+  var BW_TOTAL = 24, bwPopped = 0;
+  function buildBubbles() {
+    var box = $('#bubblewrap');
+    box.innerHTML = '';
+    bwPopped = 0;
+    for (var i = 0; i < BW_TOTAL; i++) {
+      var b = document.createElement('span');
+      b.className = 'bub';
+      box.appendChild(b);
+    }
+    $('#bwStat').textContent = '已戳爆 0/' + BW_TOTAL;
+    $('#bwRefill').hidden = true;
+  }
+  buildBubbles();
+  $('#bubblewrap').addEventListener('pointerdown', function (e) {
+    var b = e.target.closest('.bub');
+    if (!b || b.classList.contains('popped')) return;
+    b.classList.add('popped', 'pop-anim');
+    popSound();
+    bwPopped++;
+    if (bwPopped === BW_TOTAL) {
+      $('#bwStat').textContent = '全部戳爆！心动值 +1 ✦';
+      $('#bwRefill').hidden = false;
+    } else {
+      $('#bwStat').textContent = '已戳爆 ' + bwPopped + '/' + BW_TOTAL;
+    }
+  });
+  $('#bwRefill').addEventListener('click', buildBubbles);
+
+  var sqCount = 0, sqTimer = null;
+  var sqWords = ['啾~', '哼哼！', '抱抱', '贴贴', '呼啊…', '再捏嘛', '软乎！'];
+  function showWord(w) {
+    var el = $('#squishWord');
+    el.textContent = w;
+    el.classList.remove('go');
+    void el.offsetWidth;
+    el.classList.add('go');
+  }
+  var sq = $('#squishy');
+  sq.addEventListener('pointerdown', function () {
+    sq.classList.add('squishing');
+    squeakSound();
+  });
+  function sqRelease() {
+    if (!sq.classList.contains('squishing')) return;
+    sq.classList.remove('squishing');
+    sq.classList.add('wobble');
+    clearTimeout(sqTimer);
+    sqTimer = setTimeout(function () { sq.classList.remove('wobble'); }, 560);
+    sqCount++;
+    $('#sqStat').textContent = '已捏 ' + sqCount + ' 下';
+    if (sqCount === 10) showWord('它开始粘着你不放啦');
+    else if (Math.random() < .55) showWord(sqWords[(Math.random() * sqWords.length) | 0]);
+  }
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+    sq.addEventListener(ev, sqRelease);
+  });
+
+  var sparkInit = false;
+  function initSpark() {
+    if (sparkInit) return;
+    sparkInit = true;
+    var cv = $('#sparkCanvas'), ctx = cv.getContext('2d');
+    var parts = [], drawing = false;
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    function size() {
+      var r = cv.parentElement.getBoundingClientRect();
+      cv.width = Math.round(r.width * dpr);
+      cv.height = Math.round(r.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#232347';
+      ctx.fillRect(0, 0, cv.width / dpr, cv.height / dpr);
+    }
+    size();
+    window.addEventListener('resize', size);
+    var colors = ['#ffd98a', '#f8b4b4', '#fff6e0', '#d4b483', '#ffffff'];
+    function spawn(x, y, n, pow) {
+      for (var i = 0; i < n; i++) {
+        if (parts.length > 350) parts.shift();
+        var a = Math.random() * Math.PI * 2, s = (Math.random() * .9 + .25) * pow;
+        parts.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - .4,
+                     life: 35 + Math.random() * 25, c: colors[(Math.random() * colors.length) | 0] });
+      }
+    }
+    (function frame() {
+      var w = cv.width / dpr, h = cv.height / dpr;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(35,35,71,.16)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.x += p.vx; p.y += p.vy; p.vy += .045; p.vx *= .985; p.life--;
+        if (p.life <= 0) { parts.splice(i, 1); continue; }
+        ctx.globalAlpha = Math.min(1, p.life / 30);
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(.6, p.life / 26), 0, 7);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    })();
+    function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function (e) {
+      drawing = true;
+      $('#sparkHint').classList.add('off');
+      var p = pos(e);
+      spawn(p.x, p.y, 26, 1.4);
+      e.preventDefault();
+    });
+    cv.addEventListener('pointermove', function (e) {
+      if (!drawing) return;
+      var p = pos(e);
+      spawn(p.x, p.y, 6, 1);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+      cv.addEventListener(ev, function () { drawing = false; });
+    });
+  }
+
+  /* ── 悄悄话信箱 ── */
+  var msgForm = document.querySelector('form.mailbox');
+  var msgText = $('#msgText'), msgCount = $('#msgCount'),
+      msgTip = $('#msgTip'), msgSend = $('#msgSend');
+  var DEV_MODE = location.protocol === 'file:' ||
+                 location.hostname === 'localhost' || location.hostname === '127.0.0.1' ||
+                 location.hostname === '' || /^192\.168\./.test(location.hostname) ||
+                 /^10\./.test(location.hostname) ||
+                 /^172\.(1[6-9]|2\d|3[01])\./.test(location.hostname);
+  function mailTip(t, sticky) {
+    msgTip.textContent = t;
+    msgTip.classList.add('show');
+    if (!sticky) setTimeout(function () { msgTip.classList.remove('show'); }, 3400);
+  }
+  msgText.addEventListener('input', function () {
+    msgCount.textContent = msgText.value.length + '/500';
+  });
+  msgForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var txt = msgText.value.trim();
+    if (!txt) { mailTip('一个字都没写，寄什么呀～'); return; }
+    msgSend.disabled = true;
+    function done(ok) {
+      msgSend.disabled = false;
+      if (!ok) { mailTip('今天风太大没寄出去，再点一次试试'); return; }
+      msgText.value = '';
+      msgCount.textContent = '0/500';
+      mailTip('已寄出 ♥ 骑士马上就能看到', true);
+      chime();
+      var r = msgSend.getBoundingClientRect();
+      for (var i = 0; i < 14; i++) {
+        (function (k) {
+          setTimeout(function () {
+            spawnHeart(r.left + r.width / 2, r.top + r.height / 2, true);
+          }, k * 60);
+        })(i);
+      }
+      setTimeout(function () { msgTip.classList.remove('show'); }, 6000);
+    }
+    if (DEV_MODE) { setTimeout(function () { done(true); }, 500); return; }
+    if (!FORMINIT_ID) { done(false); return; }
+    fetch('https://forminit.com/f/' + FORMINIT_ID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blocks: [{ type: 'text', name: 'message', value: txt }] })
+    }).then(function (res) {
+        if (!res.ok) { done(false); return; }
+        res.json().then(function (d) {
+          done(!!(d && d.success));
+        }).catch(function () { done(false); });
+      }).catch(function () { done(false); });
+  });
+
+  /* ── 问答 ── */
+  var noTexts = ['再想想嘛…', '真的不再想想？', '你看我等你好久了', '好啦，左边那个才是真心话'];
+  var ni = 0;
+  $('#btnNo').addEventListener('click', function () {
+    var b = $('#btnNo');
+    b.textContent = noTexts[ni % noTexts.length]; ni++;
+    b.style.transform = 'translate(' + (Math.random() * 70 - 35).toFixed(0) + 'px,' + (Math.random() * 30 - 15).toFixed(0) + 'px)';
+  });
+  $('#btnYes').addEventListener('click', function () {
+    chime();
+    var r = $('#btnYes').getBoundingClientRect();
+    for (var i = 0; i < 30; i++) {
+      (function (k) {
+        setTimeout(function () {
+          spawnHeart(r.left + r.width / 2 + (Math.random() * 60 - 30), r.top + r.height / 2, true);
+        }, k * 45);
+      })(i);
+    }
+    var q = $('#question');
+    q.classList.add('gone');
+    setTimeout(function () {
+      q.style.display = 'none';
+      var f = $('#final');
+      f.classList.add('show');
+      requestAnimationFrame(function () { requestAnimationFrame(function () { f.classList.add('in'); }); });
+      f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      typewrite($('#finalTitle'), '成交，余生请多指教。', 120);
+    }, 600);
+  });
+
+  /* ══════════════════════════════════════════════════
+     篇章数据区 ⭐ 只需要改这里 ⭐
+     0) 首页（雨霖之家）：封面+章节长滚动，结构直接在本文件搜 page-home 改
+     1) 日常连载：新的一篇往 JOURNAL 最上面加（先写先进）
+        { date: '年-月-日', mood: '一个emoji', title: '小标题', text: '正文',
+          photo: 'photos/文件.jpg', cap: '照片说明' }   ← photo/cap 可选；
+          照片放进 letter-for-yuhan/photos/ 文件夹会一起发布（公开可访问）
+     2) 爱心票亭：count 直接改数量；新券照格式加一行
+        { owner: 't' 汤的票夹 / 'y' 雨含的票夹, icon: 'emoji', name, count, note }
+     3) 票根墙：用掉一张券，往 TICKET_LOG 最上面加一条销账记录
+        { date: '年-月-日', text: '用掉了什么券，一句话' }
+     4) 情话签：QUOTES 随便加，一人一句往下排
+     5) 月亮小屋（生理期小日历）：不用预填数据，她自己点日历记；
+        记录存在她手机浏览器的 localStorage，正常天数阈值见下方「月亮小屋」段
+     ══════════════════════════════════════════════════ */
+  var JOURNAL = [
+    { date: '2026-09-17', mood: '✨', title: '第二章，开张',
+      text: '从今天起，这个小站多了一块「日常连载」：以后我们的大小事，都记在这一页一页里。开篇第一笔，先记下连载开工、票亭开张——往后的鸡毛蒜皮，请雨含小宝多多捧场。' }
+  ];
+  var TICKETS = [
+    { owner: 't', icon: '💆', name: '雨含牌 · 按摩券', count: 3,
+      note: '小汤持券，雨含兑现：肩颈按摩一次，约 30 分钟，力度五星好评。' },
+    { owner: 't', icon: '🥤', name: '喝水扒开不生气券', count: 1,
+      note: '雨含生气值 +100 时立刻出示：递上温水一杯，再把人从气头上轻轻扒开。喝完这杯，气消一半，剩下一半抱着消。' },
+    { owner: 'y', icon: '💆', name: '小汤牌 · 按摩券', count: 3,
+      note: '雨含持券，小汤兑现：肩颈按摩一次，约 30 分钟，随叫随到不加价。' },
+    { owner: 'y', icon: '✨', name: '空白许愿券', count: 1,
+      note: '券面故意留白：兑现时当场写下一个愿望，写什么算什么，小汤无理由照办。' }
+  ];
+  var TICKET_LOG = [
+    // 示例：{ date: '2026-09-20', text: '雨含用掉「小汤牌 · 按摩券」一张，评价：手艺不错' }
+  ];
+  var QUOTES = [
+    '今天也很喜欢你，比昨天多一点点。',
+    '你笑一下嘛，你一笑我的 day 就亮了。',
+    '我把「想你」设成了每日循环播放。',
+    '你负责可爱，负责宠你的那个人已经就位。',
+    '你随口说过的话，我都存在「重要」文件夹里。',
+    '我的运气大概都用来遇见你了，所以抽奖老是不中。',
+    '抱一下，电量 100%。',
+    '晚安之前还有一件大事要办：想你。',
+    '别人的晚安是客套，我的晚安是想哄你睡觉。',
+    '天气好的话想带你出去走走，天气不好也想。',
+    '别怕，有事我在。我一直都在。',
+    '「有你真好」这四个字，说一百遍也不腻。'
+  ];
+  /* ⭐⭐⭐⭐⭐⭐⭐⭐⭐ 数据区到此为止，下面不用动 ⭐⭐⭐⭐⭐⭐⭐⭐⭐ */
+
+  var pageMain = $('#letter');
+  var pageHome = $('#page-home');
+  var pageDaily = $('#page-daily');
+  var pageTickets = $('#page-tickets');
+  var pageMoon = $('#page-moon');
+  var dock = $('#dock');
+
+  function routeName() {
+    var h = location.hash.replace(/^#\/?/, '');
+    return (h === 'letter' || h === 'daily' || h === 'tickets' || h === 'moon') ? h : 'home';
+  }
+  function renderRoute() {
+    if (!opened) return;
+    var v = routeName();
+    pageMain.classList.toggle('page-hidden', v !== 'letter');
+    pageHome.classList.toggle('active', v === 'home');
+    pageDaily.classList.toggle('active', v === 'daily');
+    pageTickets.classList.toggle('active', v === 'tickets');
+    pageMoon.classList.toggle('active', v === 'moon');
+    if (v === 'letter') enterLetter();
+    var items = dock.querySelectorAll('.dock-item');
+    for (var i = 0; i < items.length; i++) {
+      var on = items[i].getAttribute('data-route') === v;
+      items[i].classList.toggle('on', on);
+      if (on) items[i].setAttribute('aria-current', 'page');
+      else items[i].removeAttribute('aria-current');
+    }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', renderRoute);
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtDate(ds) {
+    var d = new Date(ds + 'T00:00:00');
+    if (isNaN(d.getTime())) return ds;
+    return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate())
+         + ' · 周' + '日一二三四五六'.charAt(d.getDay());
+  }
+  function ticketTotal() {
+    return TICKETS.reduce(function (s, t) { return s + Math.max(0, t.count || 0); }, 0);
+  }
+
+  function renderJournal() {
+    var box = $('#diaryList');
+    box.innerHTML = '';
+    var lastYear = null;
+    JOURNAL.forEach(function (it) {
+      var y = String(it.date || '').slice(0, 4);
+      if (lastYear !== null && y && y !== lastYear) {
+        var ym = document.createElement('div');
+        ym.className = 'year-mark';
+        ym.textContent = y;
+        box.appendChild(ym);
+      }
+      if (y) lastYear = y;
+      var c = document.createElement('article');
+      c.className = 'page-card';
+      var h = '<span class="tape"></span>'
+            + '<div class="pe-head"><span class="pe-date">' + fmtDate(it.date) + '</span>'
+            + '<span class="pe-mood">' + (it.mood || '♥') + '</span></div>';
+      if (it.title) h += '<h3 class="pe-title">' + it.title + '</h3>';
+      h += '<p class="pe-text">' + it.text + '</p>';
+      if (it.photo) {
+        h += '<figure class="pe-photo"><img src="' + it.photo + '" loading="lazy" alt="">'
+           + (it.cap ? '<figcaption>' + it.cap + '</figcaption>' : '') + '</figure>';
+      }
+      h += '<p class="pe-sig">— 小汤 记</p>';
+      c.innerHTML = h;
+      box.appendChild(c);
+    });
+    var g = document.createElement('article');
+    g.className = 'page-card ghost';
+    g.innerHTML = '<p class="g-title">下一页 · 留白中</p>'
+                + '<p class="g-sub">这一页先空着，<br>等哪天我们又干了什么可爱的傻事，就把它写满。</p>';
+    box.appendChild(g);
+    $('#diaryMeta').textContent = '已连载 ' + JOURNAL.length + ' 页 · 未完待续';
+  }
+
+  function thud() {
+    try {
+      if (!actx) initAudio();
+      if (actx.state === 'suspended') actx.resume();
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(170, t);
+      o.frequency.exponentialRampToValueAtTime(60, t + .12);
+      g.gain.setValueAtTime(.2, t);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .16);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + .18);
+    } catch (err) {}
+  }
+
+  function ticketCard(t, i) {
+    var el = document.createElement('div');
+    el.className = 'ticket' + (t.count <= 0 ? ' used' : '');
+    el.innerHTML =
+      '<div class="tk-stub"><span class="tk-icon">' + t.icon + '</span>'
+      + '<span class="tk-no">NO.' + pad2(i + 1) + '</span></div>'
+      + '<div class="tk-body"><p class="tk-name">' + t.name + '</p>'
+      + '<p class="tk-note">' + t.note + '</p>'
+      + '<div class="tk-meta"><span class="tk-count">余 ' + t.count + ' 张</span>'
+      + '<span class="tk-valid">长期有效 · 每张限用一次</span></div></div>'
+      + (t.count <= 0 ? '<span class="tk-stamp">已兑完</span>' : '');
+    el.addEventListener('pointerdown', function (e) {
+      el.classList.remove('wiggle');
+      void el.offsetWidth;
+      el.classList.add('wiggle');
+      if (t.count <= 0) { thud(); return; }
+      popSound();
+      spawnHeart(e.clientX, e.clientY, false);
+    });
+    return el;
+  }
+
+  function renderStubs() {
+    var wall = $('#stubWall');
+    wall.innerHTML = '';
+    $('#tkLogCount').textContent = TICKET_LOG.length ? '共 ' + TICKET_LOG.length + ' 张' : '虚位以待';
+    if (!TICKET_LOG.length) {
+      var e = document.createElement('div');
+      e.className = 'stub-empty';
+      e.innerHTML = '还没有销账记录。<br>第一张用掉的券，票根就贴在这里。';
+      wall.appendChild(e);
+      return;
+    }
+    TICKET_LOG.forEach(function (it) {
+      var s = document.createElement('div');
+      s.className = 'stub';
+      s.innerHTML = '<span class="st-ic">🎫</span><span class="st-date">' + (it.date || '') + '</span><span>' + it.text + '</span>';
+      wall.appendChild(s);
+    });
+  }
+
+  function renderTickets() {
+    ['t', 'y'].forEach(function (o) {
+      var list = TICKETS.filter(function (t) { return t.owner === o; });
+      var total = list.reduce(function (s, t) { return s + Math.max(0, t.count || 0); }, 0);
+      $('#tkc-' + o).textContent = '共 ' + total + ' 张在架';
+      var box = $('#tk-' + o);
+      box.innerHTML = '';
+      list.forEach(function (t, i) { box.appendChild(ticketCard(t, i)); });
+    });
+    $('#tkTotal').textContent = '在架 ' + ticketTotal() + ' 张 · 永不过期';
+  }
+
+  function moonPhaseName() {
+    var synodic = 29.53058867;
+    var known = Date.UTC(2000, 0, 6, 18, 14); /* 2000-01-06 18:14 UTC 新月 */
+    var phase = ((Date.now() - known) / 864e5) % synodic / synodic;
+    if (phase < 0) phase += 1;
+    var names = ['新月', '娥眉月', '上弦月', '盈凸月', '满月', '亏凸月', '下弦月', '残月'];
+    return names[Math.round(phase * 8) % 8];
+  }
+
+  function renderChips() {
+    var ann = $('#chipAnniv');
+    if (isNaN(start.getTime())) { ann.style.display = 'none'; }
+    else {
+      var now = new Date();
+      var today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      var a = new Date(now.getFullYear(), start.getMonth(), start.getDate()).getTime();
+      if (a < today) a = new Date(now.getFullYear() + 1, start.getMonth(), start.getDate()).getTime();
+      var d = Math.round((a - today) / 864e5);
+      ann.textContent = d === 0 ? '🎂 今天是纪念日！' : '🎂 距离纪念日还有 ' + d + ' 天';
+    }
+    $('#chipMoon').textContent = '🌙 今晚 · ' + moonPhaseName();
+  }
+
+  function renderFortune(seed) {
+    var idx = seed != null ? ((seed % QUOTES.length) + QUOTES.length) % QUOTES.length
+                           : (Math.random() * QUOTES.length) | 0;
+    $('#fortuneText').textContent = '「' + QUOTES[idx] + '」';
+  }
+  var fortuneCard = $('#fortuneCard');
+  fortuneCard.addEventListener('pointerdown', function (e) {
+    fortuneCard.classList.remove('flip');
+    void fortuneCard.offsetWidth;
+    fortuneCard.classList.add('flip');
+    popSound();
+    renderFortune();
+    spawnHeart(e.clientX, e.clientY, false);
+  });
+
+  /* ── 家 · 首页（封面计数与月亮状态）── */
+  function renderHomeBits() {
+    if (!HIDE_COUNTER && !isNaN(start.getTime())) {
+      $('#homeDaysNum').textContent = Math.max(0, Math.floor((Date.now() - start.getTime()) / 864e5)).toLocaleString('zh-CN');
+      setInterval(function () {
+        var ms = Date.now() - start.getTime();
+        if (ms < 0) return;
+        $('#homeClock').textContent = pad(Math.floor(ms % 864e5 / 36e5)) + ':' + pad(Math.floor(ms % 36e5 / 6e4)) + ':' + pad(Math.floor(ms % 6e4 / 1e3));
+      }, 1000);
+    }
+    $('#chipHomeMoon').textContent = '🌙 今晚 · ' + moonPhaseName();
+  }
+
+  /* ── 月亮小屋 · 生理期记录（数据只存本机 localStorage）──
+     参考主流经期 App 的通行做法：
+     · 开始=确认弹层（会影响预测，值得多一步）；结束/修改=每步可撤销或再确认
+     · 周期正常范围 21–35 天、经期 3–7 天，超出只温柔提醒不拦着
+     · 预测至少 3 个周期才像样，不足时如实说「再记几次会更准」
+     · Safari 等浏览器可能清 localStorage → 提供「备份 / 导入」文本码 */
+  var PERIOD_KEY = 'yulin_periods_v1';
+  var CYCLE_MIN = 21, CYCLE_MAX = 35, PERIOD_LEN_OK = 7, PERIOD_LEN_LONG = 10, BACKFILL_MAX = 35;
+  function loadPeriods() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(PERIOD_KEY) || '[]');
+      if (!Array.isArray(raw)) return [];
+      var list = [];
+      raw.forEach(function (p) {
+        if (p && /^\d{4}-\d{2}-\d{2}$/.test(p.start || '')) {
+          list.push({ start: p.start, end: /^\d{4}-\d{2}-\d{2}$/.test(p.end || '') ? p.end : null });
+        }
+      });
+      list.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
+      return list;
+    } catch (err) { return []; }
+  }
+  var periods = loadPeriods();
+  function savePeriods() {
+    try { localStorage.setItem(PERIOD_KEY, JSON.stringify(periods)); } catch (err) {}
+  }
+  function toDay(s) { return new Date(s + 'T00:00:00'); }
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function dayDiff(a, b) { return Math.round((toDay(b) - toDay(a)) / 864e5); }
+  function addDaysStr(s, n) {
+    var d = toDay(s);
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function prettyShort(s) {
+    var d = toDay(s);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  }
+  function activePeriod() {
+    for (var i = 0; i < periods.length; i++) if (!periods[i].end) return periods[i];
+    return null;
+  }
+  function periodStats() {
+    var cyc = [], lens = [];
+    for (var i = 0; i + 1 < periods.length; i++) {
+      var d = dayDiff(periods[i + 1].start, periods[i].start);
+      if (d >= CYCLE_MIN - 4 && d <= 60) cyc.push(d); /* 太短的多半是记错，不进平均 */
+    }
+    periods.forEach(function (p) {
+      if (p.end) {
+        var L = dayDiff(p.start, p.end) + 1;
+        if (L >= 1 && L <= 20) lens.push(L);
+      }
+    });
+    function avg(a) {
+      if (!a.length) return 0;
+      var s = 0;
+      a.forEach(function (x) { s += x; });
+      return Math.round(s / a.length);
+    }
+    var ac = avg(cyc.slice(0, 6));
+    var next = (ac && periods.length) ? addDaysStr(periods[0].start, ac) : null;
+    var irregular = cyc.length >= 2 &&
+      (Math.abs(cyc[0] - cyc[1]) > 9 || cyc[0] < CYCLE_MIN || cyc[0] > CYCLE_MAX);
+    return {
+      avgCycle: cyc.length ? ac : 0,
+      avgLen: lens.length ? avg(lens.slice(0, 6)) : 0,
+      next: next, samples: cyc.length, irregular: irregular
+    };
+  }
+
+  /* ── 确认弹层（sheet）── */
+  var sheetMask = $('#sheetMask'), sheetTitle = $('#sheetTitle'), sheetSub = $('#sheetSub'),
+      sheetDates = $('#sheetDates'), sheetText = $('#sheetText'), sheetWarn = $('#sheetWarn'),
+      sheetYes = $('#sheetYes'), sheetNo = $('#sheetNo'), sheetDel = $('#sheetDel');
+  var sheetOnYes = null, sheetOnDel = null, sheetArmTimer = null;
+  function openSheet(cfg) {
+    sheetTitle.textContent = cfg.title || '';
+    sheetSub.textContent = cfg.sub || '';
+    sheetWarn.textContent = cfg.warn || '';
+    sheetDates.innerHTML = '';
+    sheetDates.style.display = (cfg.dates && cfg.dates.length) ? '' : 'none';
+    (cfg.dates || []).forEach(function (d) {
+      var lab = document.createElement('label');
+      var inp = document.createElement('input');
+      inp.type = 'date';
+      inp.value = d.value || '';
+      if (d.min) inp.min = d.min;
+      if (d.max) inp.max = d.max;
+      var nm = document.createElement('span');
+      nm.textContent = d.name;
+      lab.appendChild(inp);
+      lab.appendChild(nm);
+      sheetDates.appendChild(lab);
+    });
+    if (cfg.text != null) { sheetText.hidden = false; sheetText.value = cfg.text; }
+    else { sheetText.hidden = true; sheetText.value = ''; }
+    sheetYes.textContent = cfg.yesText || '记好了';
+    sheetNo.textContent = cfg.noText || '再想想';
+    sheetOnYes = cfg.onYes || null;
+    sheetOnDel = cfg.onDel || null;
+    sheetDel.hidden = !cfg.onDel;
+    sheetYes.disabled = true; /* 防手速：弹层刚弹出来的一瞬间不许点确认 */
+    clearTimeout(sheetArmTimer);
+    sheetArmTimer = setTimeout(function () { sheetYes.disabled = false; }, 450);
+    sheetMask.classList.add('show');
+  }
+  function closeSheet() {
+    sheetMask.classList.remove('show');
+    sheetOnYes = null;
+    sheetOnDel = null;
+  }
+  function sheetVals() {
+    var out = [], ins = sheetDates.querySelectorAll('input');
+    for (var i = 0; i < ins.length; i++) out.push(ins[i].value);
+    return out;
+  }
+  sheetNo.addEventListener('click', closeSheet);
+  sheetMask.addEventListener('click', function (e) { if (e.target === sheetMask) closeSheet(); });
+  sheetYes.addEventListener('click', function () {
+    if (sheetYes.disabled) return;
+    var cb = sheetOnYes;
+    if (!cb) { closeSheet(); return; }
+    if (cb(sheetVals(), sheetText.value) !== false) closeSheet();
+  });
+  sheetDel.addEventListener('click', function () {
+    if (sheetOnDel) { var cb = sheetOnDel; sheetOnDel = null; cb(); }
+  });
+
+  /* ── 撤销提示（可逆操作给 6 秒反悔期）── */
+  var undoToast = $('#undoToast'), undoMsg = $('#undoMsg'), undoBtn = $('#undoBtn');
+  var undoTimer = null, undoCb = null;
+  function showUndo(msg, cb) {
+    undoMsg.textContent = msg;
+    undoCb = cb || null;
+    undoBtn.hidden = !cb;
+    undoToast.classList.add('show');
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(function () { undoToast.classList.remove('show'); undoCb = null; }, 6000);
+  }
+  undoBtn.addEventListener('click', function () {
+    clearTimeout(undoTimer);
+    undoToast.classList.remove('show');
+    if (undoCb) { var cb = undoCb; undoCb = null; cb(); }
+  });
+  function celebrate(el) {
+    chime();
+    var r = el.getBoundingClientRect();
+    for (var i = 0; i < 12; i++) {
+      (function (k) {
+        setTimeout(function () {
+          spawnHeart(r.left + r.width / 2, r.top + r.height / 2, true);
+        }, k * 55);
+      })(i);
+    }
+  }
+
+  /* ── 月亮小屋 · 渲染与操作 ── */
+  var moonPage = $('#page-moon');
+  var moonHint = $('#moonHint'),
+      moonMeta = $('#moonMeta'), moonChips = $('#moonChips'),
+      moonRecs = $('#moonRecs'), moonCount = $('#moonCount'),
+      moonEditBtn = $('#moonEditBtn'), moonBackupBtn = $('#moonBackupBtn'),
+      calTitle = $('#calTitle'), calGrid = $('#calGrid'),
+      calPrev = $('#calPrev'), calNext = $('#calNext'),
+      moonNowText = $('#moonNowText'), moonNowBtn = $('#moonNowBtn');
+  var moonEditing = false;
+  var calYear = 0, calMonth = 0; /* 日历当前显示的年月 */
+
+  function renderMoon() {
+    var act = activePeriod(), st = periodStats(), t = todayStr();
+    if (!calYear) {
+      var d0 = toDay(t);
+      calYear = d0.getFullYear();
+      calMonth = d0.getMonth();
+    }
+    /* 日历下的状态行：语气放轻，页面不喊「姨妈」 */
+    if (act) {
+      var dayN = dayDiff(act.start, t) + 1;
+      moonNowText.textContent = '月亮拜访中 · 今天第 ' + dayN + ' 天';
+      moonNowBtn.textContent = '走了记一下';
+      moonHint.textContent = dayN > PERIOD_LEN_OK
+        ? '已经第 ' + dayN + ' 天了，一般经期 3–7 天；要是其实已经走了，点上面记一下。'
+        : '';
+    } else {
+      moonNowText.textContent = periods.length
+        ? '小屋静悄悄的，等下一次来访。'
+        : '这里还没有标记，来的那天轻轻点一下就好。';
+      moonNowBtn.textContent = '来了记一下';
+      moonHint.textContent = '';
+      if (st.next) {
+        var dl = dayDiff(t, st.next);
+        if (dl < 0) moonHint.textContent = '预测的日子过了还没来——也很正常，再等等它。';
+        else if (dl <= 2) moonHint.textContent = '预测就在这两天，留意身体的小信号。';
+      }
+    }
+    var chips = [];
+    if (st.avgCycle) chips.push('平均周期 ≈ ' + st.avgCycle + ' 天');
+    if (st.avgLen) chips.push('平均经期 ' + st.avgLen + ' 天');
+    if (st.next) chips.push('下次预计 ' + prettyShort(st.next));
+    if (periods.length && st.samples < 3) chips.push('再记 ' + (3 - st.samples) + ' 次会更准');
+    if (st.irregular) chips.push('近期周期有点波动，很常见，别慌');
+    moonChips.innerHTML = '';
+    chips.forEach(function (c) {
+      var s = document.createElement('span');
+      s.className = 'chip';
+      s.textContent = c;
+      moonChips.appendChild(s);
+    });
+    moonMeta.textContent = periods.length
+      ? '已记 ' + periods.length + ' 次 · 数据只存在这台手机里'
+      : '还没有记录 · 数据只会存在这台手机里';
+    moonCount.textContent = periods.length ? periods.length + ' 次' : '虚位以待';
+    renderCalendar();
+    renderMoonList();
+    renderHomeLive();
+  }
+
+  function renderMoonList() {
+    moonRecs.innerHTML = '';
+    if (!periods.length) {
+      var e = document.createElement('div');
+      e.className = 'rec-empty';
+      e.innerHTML = '还没有标记。<br>姨妈来的时候，点日历上那天就能记下；点错了也不怕，随时能改能删。';
+      moonRecs.appendChild(e);
+      return;
+    }
+    periods.forEach(function (p, i) {
+      var row = document.createElement('div');
+      row.className = 'rec';
+      var main = p.end
+        ? prettyShort(p.start) + ' – ' + prettyShort(p.end) + ' · 共 ' + (dayDiff(p.start, p.end) + 1) + ' 天'
+        : prettyShort(p.start) + ' 开始 · 进行中';
+      var h = '<span class="r-main">' + main + '</span>'
+            + (p.end
+              ? '<span class="r-tag">经期 ' + (dayDiff(p.start, p.end) + 1) + ' 天</span>'
+              : '<span class="r-tag open">进行中</span>');
+      if (i + 1 < periods.length) {
+        h += '<span class="r-tag">周期 ' + dayDiff(periods[i + 1].start, p.start) + ' 天</span>';
+      }
+      h += '<button class="r-fix" type="button">修正</button>';
+      row.innerHTML = h;
+      row.querySelector('.r-fix').addEventListener('click', function () { openRecSheet(i); });
+      moonRecs.appendChild(row);
+    });
+  }
+
+  function askMoonStart(ds) {
+    var t = todayStr();
+    var base = (ds && dayDiff(t, ds) <= 0) ? ds : t;
+    var warn = '';
+    if (periods.length) {
+      var gap = dayDiff(periods[0].start, base);
+      if (gap > 0 && gap < CYCLE_MIN) warn = '距上次开始才 ' + gap + ' 天。一般周期 ' + CYCLE_MIN + '–' + CYCLE_MAX + ' 天，先看看日子对不对。';
+      else if (gap > 45) warn = '距上次已经 ' + gap + ' 天啦，日子没错的话就放心记。';
+    }
+    openSheet({
+      title: '记下：这次来了',
+      sub: '「走的日子」还不知道就先空着；补记过去的那次，就把两天都选上。',
+      warn: warn,
+      dates: [
+        { name: '来的日子', value: base, min: addDaysStr(t, -BACKFILL_MAX), max: t },
+        { name: '走的日子', value: '', max: t }
+      ],
+      yesText: '记好了',
+      onYes: function (v) {
+        if (!v[0]) { sheetWarn.textContent = '先选一个「来的日子」哦'; return false; }
+        if (periodAt(v[0])) { sheetWarn.textContent = '这天已经有记录了，点日历上那天可以直接改。'; return false; }
+        if (v[1] && dayDiff(v[0], v[1]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
+        if (!v[1]) {
+          var later = null;
+          for (var k = 0; k < periods.length; k++) if (periods[k].start > v[0]) { later = periods[k].start; break; }
+          if (later) { sheetWarn.textContent = '比它晚的 ' + prettyShort(later) + ' 已经记了，这条得把「走的日子」也填上。'; return false; }
+        }
+        for (var k3 = 0; k3 < periods.length; k3++) {
+          var q = periods[k3];
+          if (v[0] <= (q.end || '9999-12-31') && q.start <= (v[1] || '9999-12-31')) {
+            sheetWarn.textContent = '跟 ' + prettyShort(q.start) + ' 那条日子重叠了，改一下或先删那条。';
+            return false;
+          }
+        }
+        periods.unshift({ start: v[0], end: v[1] || null });
+        periods.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
+        savePeriods();
+        renderMoon();
+        celebrate(moonNowBtn);
+        var msg = v[1] ? prettyShort(v[0]) + ' – ' + prettyShort(v[1]) + '，记好了' : prettyShort(v[0]) + '，这次来了';
+        showUndo('记好啦：' + msg, function () {
+          for (var k2 = 0; k2 < periods.length; k2++) {
+            if (periods[k2].start === v[0]) {
+              periods.splice(k2, 1);
+              savePeriods();
+              renderMoon();
+              break;
+            }
+          }
+        });
+      }
+    });
+  }
+  function askMoonEnd(ds) {
+    var act = activePeriod(), t = todayStr();
+    var base = (ds && dayDiff(act.start, ds) >= 0 && dayDiff(t, ds) <= 0) ? ds : t;
+    openSheet({
+      title: '记下：这次走了',
+      sub: '从 ' + prettyShort(act.start) + ' 开始的这一次。默认今天，也可以改。',
+      dates: [{ name: '走的日子', value: base, min: act.start, max: t }],
+      yesText: '记好了',
+      onYes: function (v) {
+        if (!v[0]) { sheetWarn.textContent = '先选一个日子哦'; return false; }
+        if (dayDiff(act.start, v[0]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
+        var len = dayDiff(act.start, v[0]) + 1;
+        act.end = v[0];
+        savePeriods();
+        renderMoon();
+        celebrate(moonNowBtn);
+        showUndo(len > PERIOD_LEN_LONG
+          ? '这次共 ' + len + ' 天，有点长；经常这样的话记得去看看医生'
+          : '记好啦，这次共 ' + len + ' 天',
+          function () {
+            act.end = null;
+            savePeriods();
+            renderMoon();
+          });
+      }
+    });
+  }
+  moonNowBtn.addEventListener('click', function () {
+    if (activePeriod()) askMoonEnd();
+    else askMoonStart();
+  });
+  calPrev.addEventListener('click', function () {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  calNext.addEventListener('click', function () {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+
+  /* ── 日历：点哪天记哪天 ── */
+  var CAL_AHEAD = 4; /* 最多往后翻几个月看预测 */
+  function periodAt(ds) {
+    for (var i = 0; i < periods.length; i++) {
+      var p = periods[i];
+      if (ds >= p.start && ds <= (p.end || '9999-12-31')) return p;
+    }
+    return null;
+  }
+  function dayMark(ds) {
+    var p = periodAt(ds);
+    if (!p) return null;
+    var t = todayStr();
+    if (ds === p.start) return p.end ? 'cap' : 'open';
+    if (p.end && ds === p.end) return 'cap';
+    return (p.end || t) >= ds ? 'mid' : null;
+  }
+  function prettyRange(p) {
+    return p.end ? prettyShort(p.start) + ' – ' + prettyShort(p.end) : prettyShort(p.start) + ' 开始 · 进行中';
+  }
+  function predictedDays() {
+    var st = periodStats(), out = {};
+    if (!st.next) return out;
+    var len = st.avgLen || 1;
+    for (var i = 0; i < len; i++) out[addDaysStr(st.next, i)] = true;
+    return out;
+  }
+  function renderCalendar() {
+    var t = todayStr();
+    calTitle.textContent = calYear + ' 年 ' + (calMonth + 1) + ' 月';
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    var lead = new Date(calYear, calMonth, 1).getDay();
+    var wds = ['日', '一', '二', '三', '四', '五', '六'];
+    var html = '';
+    for (var w = 0; w < 7; w++) html += '<span class="cal-wd">' + wds[w] + '</span>';
+    for (var b = 0; b < lead; b++) html += '<span class="cal-day blank"></span>';
+    var pred = predictedDays();
+    for (var d = 1; d <= daysInMonth; d++) {
+      var ds = calYear + '-' + pad2(calMonth + 1) + '-' + pad2(d);
+      var cls = 'cal-day';
+      var isFuture = dayDiff(t, ds) > 0;
+      if (isFuture) cls += ' future';
+      if (ds === t) cls += ' today';
+      var mark = dayMark(ds);
+      if (mark === 'cap') cls += ' marked cap';
+      else if (mark === 'open') cls += ' mark-open';
+      else if (mark === 'mid') cls += ' marked';
+      else if (pred[ds]) cls += ' pred';
+      html += '<button type="button" class="' + cls + '" data-d="' + ds + '"' + (isFuture ? ' disabled' : '') + '>' + d + '</button>';
+    }
+    calGrid.innerHTML = html;
+    var btns = calGrid.querySelectorAll('.cal-day[data-d]');
+    for (var i = 0; i < btns.length; i++) {
+      (function (btn) {
+        btn.addEventListener('click', function () { openDaySheet(btn.getAttribute('data-d')); });
+      })(btns[i]);
+    }
+    var cur = new Date(calYear, calMonth, 1);
+    if (periods.length) {
+      var oldest = toDay(periods[periods.length - 1].start);
+      calPrev.disabled = new Date(oldest.getFullYear(), oldest.getMonth(), 1) >= cur;
+    } else {
+      calPrev.disabled = false;
+    }
+    var nowD = toDay(t);
+    calNext.disabled = cur >= new Date(nowD.getFullYear(), nowD.getMonth() + CAL_AHEAD, 1);
+  }
+  function openDaySheet(ds) {
+    var t = todayStr();
+    if (dayDiff(t, ds) > 0) return; /* 未来的日子只能看，不能记 */
+    var act = activePeriod();
+    var mark = dayMark(ds);
+    var pretty = prettyShort(ds);
+    if (!mark) {
+      askMoonStart(ds);
+      return;
+    }
+    if (mark === 'open') {
+      openSheet({
+        title: pretty + ' 是这次的第一天',
+        sub: '哪天走了，点那天记一下；这条不要了也可以删。',
+        dates: [{ name: '走的日子', value: t, min: ds, max: t }],
+        yesText: '记走了',
+        noText: '先不动',
+        onYes: function (v) {
+          var p = activePeriod();
+          if (!v[0]) { sheetWarn.textContent = '先选一个日子哦'; return false; }
+          if (dayDiff(p.start, v[0]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
+          var len = dayDiff(p.start, v[0]) + 1;
+          p.end = v[0];
+          savePeriods();
+          renderMoon();
+          celebrate(moonNowBtn);
+          showUndo('记好啦，这次共 ' + len + ' 天', function () {
+            p.end = null;
+            savePeriods();
+            renderMoon();
+          });
+        },
+        onDel: function () { confirmDeletePeriod(activePeriod()); }
+      });
+      return;
+    }
+    var p = periodAt(ds);
+    openSheet({
+      title: pretty + ' 这天有记录',
+      sub: prettyRange(p) + '。要把这一整条删掉吗？改日子可以进「修正记录」。',
+      yesText: '删掉这条',
+      noText: '留着',
+      onYes: function () { confirmDeletePeriod(p); }
+    });
+  }
+  function confirmDeletePeriod(p) {
+    openSheet({
+      title: '删除这条记录？',
+      sub: prettyRange(p) + '，删了就找不回来了。',
+      yesText: '删掉',
+      noText: '手滑了',
+      onYes: function () {
+        var i = periods.indexOf(p);
+        if (i > -1) periods.splice(i, 1);
+        savePeriods();
+        renderMoon();
+        showUndo('删掉了', null);
+      }
+    });
+  }
+
+  function openRecSheet(idx) {
+    var p = periods[idx], t = todayStr();
+    openSheet({
+      title: '修正这条记录',
+      sub: '「走的日子」留空就表示还没记走了；两个日子都能改。',
+      dates: [
+        { name: '来的日子', value: p.start, max: t },
+        { name: '走的日子', value: p.end || '', max: t }
+      ],
+      yesText: '保存',
+      noText: '先不动',
+      onYes: function (v) {
+        if (!v[0]) { sheetWarn.textContent = '开始的日子不能空'; return false; }
+        if (v[1] && dayDiff(v[0], v[1]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
+        p.start = v[0];
+        p.end = v[1] || null;
+        periods.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
+        savePeriods();
+        renderMoon();
+        showUndo('改好了', null);
+      },
+      onDel: function () {
+        openSheet({
+          title: '删除这条记录？',
+          sub: prettyShort(p.start) + ' 的这一条，删了就找不回来了。',
+          yesText: '删掉',
+          noText: '手滑了',
+          onYes: function () {
+            var i = periods.indexOf(p);
+            if (i > -1) periods.splice(i, 1);
+            savePeriods();
+            renderMoon();
+            showUndo('删掉了', null);
+          }
+        });
+      }
+    });
+  }
+
+  moonEditBtn.addEventListener('click', function () {
+    if (!moonEditing) {
+      openSheet({
+        title: '进入修正模式？',
+        sub: '可以改日子、补「走了」、删错记，每一步还会再问你一次。',
+        yesText: '进入',
+        noText: '先不用',
+        onYes: function () {
+          moonEditing = true;
+          moonPage.classList.add('editing');
+          moonEditBtn.textContent = '退出修正';
+          moonBackupBtn.hidden = false;
+          renderMoonList();
+        }
+      });
+    } else {
+      moonEditing = false;
+      moonPage.classList.remove('editing');
+      moonEditBtn.textContent = '修正记录';
+      moonBackupBtn.hidden = true;
+      renderMoonList();
+    }
+  });
+
+  moonBackupBtn.addEventListener('click', function () {
+    openSheet({
+      title: '备份 / 导入',
+      sub: '下面这串就是全部记录：长按全选复制，存到备忘录就行。换手机时把备份码粘进来点「导入」。',
+      text: JSON.stringify(periods),
+      yesText: '导入',
+      noText: '关闭',
+      onYes: function (_, txt) {
+        var ok = false;
+        try {
+          var arr = JSON.parse(txt);
+          if (Array.isArray(arr)) {
+            var clean = [];
+            arr.forEach(function (p) {
+              if (p && /^\d{4}-\d{2}-\d{2}$/.test(p.start || '')) {
+                clean.push({ start: p.start, end: /^\d{4}-\d{2}-\d{2}$/.test(p.end || '') ? p.end : null });
+              }
+            });
+            var map = {};
+            periods.forEach(function (p) { map[p.start] = p; });
+            clean.forEach(function (p) { map[p.start] = p; });
+            var merged = [];
+            for (var k in map) if (map[k]) merged.push(map[k]);
+            merged.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
+            periods = merged;
+            savePeriods();
+            renderMoon();
+            showUndo('导入好了，现在共 ' + periods.length + ' 条记录', null);
+            ok = true;
+          }
+        } catch (err) {}
+        if (!ok) { sheetWarn.textContent = '这串备份码没认出来，检查一下是不是完整的'; return false; }
+      }
+    });
+  });
+
+  function renderHomeLive() {
+    var el = $('#liveMoon');
+    if (!el) return;
+    var act = activePeriod(), st = periodStats();
+    if (act) el.textContent = '🌙 进行中 · 第 ' + (dayDiff(act.start, todayStr()) + 1) + ' 天';
+    else if (st.next) el.textContent = '🌙 下次预计 ' + prettyShort(st.next);
+    else el.textContent = '🌙 还没有记录';
+  }
+
+  renderJournal();
+  renderTickets();
+  renderStubs();
+  renderChips();
+  renderHomeBits();
+  renderMoon();
+  renderFortune(Math.floor(Date.now() / 864e5)); /* 按日期定「今日签」，两台手机看到同一句 */
+})();
+</script>
+</body>
+</html>
