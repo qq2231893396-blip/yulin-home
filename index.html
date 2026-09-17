@@ -9,10 +9,11 @@
   2. 信的文字：直接在本文件里搜索对应句子修改即可
   3. 四个板块（信/日常连载/爱心票亭/月亮小屋）：在本文件最底部的 <script> 里
      找「篇章数据区 ⭐」，按注释改；日记配图放 photos/ 文件夹即可
-  4. 月亮小屋（生理期小日历）：首屏一个大按钮，来了点一下、走了点一下，不用填表；
-     日历负责补记和改错（点任何一天），删除即时生效、6 秒内可撤销；
+  4. 月亮小屋（生理期记录）：三种可切换的模式（一句话/圆月亮/时间线），
+     首屏一个大按钮，来了点一下、走了点一下，不用填表；
+     补录、改错、备份都收在「过往记录」抽屉里，删除即时生效、6 秒内可撤销；
      数据只存在她手机浏览器的 localStorage 里，不上传服务器；
-     换手机或清理浏览器数据会丢，页面底部有「备份 / 导入」小链接
+     换手机或清理浏览器数据会丢，抽屉里有「备份 / 导入」
   托管：GitHub Pages（仓库 yulin-home）。改完内容 git push 上去就自动重新发布，链接不变。
   看她的留言：她的悄悄话走 Forminit 表单通道直送骑士的 Gmail，Forminit 后台也留有存档。
 -->
@@ -530,44 +531,34 @@
   .f-text { margin-top: 12px; font-size: 16px; line-height: 2; color: var(--ink); min-height: 2em; }
   .f-hint { margin-top: 10px; font-size: 11px; color: rgba(138,122,109,.6); letter-spacing: .2em; }
 
-  /* ── 月亮小屋 · 生理期小日历 ─────────────────────────── */
-  .cal-card { padding: 24px 18px 18px; }
-  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .cal-title { font-size: 15.5px; color: var(--ink); letter-spacing: .18em; text-indent: .18em; }
-  .cal-nav {
-    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-    border: 1px solid rgba(201,138,138,.45); background: transparent; color: var(--rose-deep);
-    font-family: inherit; font-size: 16px; line-height: 1; transition: background .25s ease;
+  /* ── 过往记录抽屉（补录 / 改错都收在这里，主界面保持干净）── */
+  #page-moon .pocket-head { cursor: pointer; }
+  .pocket-arrow { font-size: 11.5px; color: rgba(255,250,241,.55); letter-spacing: .1em; flex: 0 0 auto; }
+  .drawer { animation: drawerIn .35s ease; }
+  .drawer[hidden] { display: none; }
+  @keyframes drawerIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .btn-moon-ghost {
+    display: block; width: 100%; margin-top: 12px; cursor: pointer;
+    font-family: inherit; font-size: 12.5px; letter-spacing: .14em; text-indent: .14em;
+    color: rgba(255,250,241,.82); background: rgba(255,250,241,.07);
+    border: 1.5px dashed rgba(255,250,241,.34); border-radius: 12px; padding: 12px 10px;
+    transition: background .25s ease;
   }
-  .cal-nav:hover { background: rgba(201,138,138,.12); }
-  .cal-nav:disabled { opacity: .3; cursor: default; background: transparent; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 14px; }
-  .cal-wd { text-align: center; font-size: 11px; color: var(--ink-soft); letter-spacing: .05em; padding: 4px 0 6px; }
-  .cal-day {
-    position: relative; aspect-ratio: 1; border: none; border-radius: 50%;
-    background: transparent; font-family: inherit; font-size: 12.5px; color: var(--ink);
-    cursor: pointer; padding: 0; font-variant-numeric: tabular-nums;
-    transition: background .15s ease;
-  }
-  .cal-day:hover { background: rgba(201,138,138,.14); }
-  .cal-day:disabled { cursor: default; }
-  .cal-day:disabled:hover { background: transparent; }
-  .cal-day.blank { visibility: hidden; }
-  .cal-day.mute { color: rgba(77,65,57,.32); }
-  .cal-day.future { color: rgba(77,65,57,.42); }
-  .cal-day.today { box-shadow: inset 0 0 0 1.5px rgba(201,138,138,.85); color: var(--rose-deep); }
-  .cal-day.marked { background: rgba(201,138,138,.24); }
-  .cal-day.marked.cap { background: rgba(201,138,138,.72); color: #fff; }
-  .cal-day.mark-open { background: rgba(201,138,138,.4); color: #fff; }
-  .cal-day.pred { border: 1.5px dashed rgba(201,138,138,.65); color: rgba(185,111,111,.85); }
-  .cal-legend { display: flex; justify-content: center; gap: 16px; margin-top: 12px; font-size: 11px; color: var(--ink-soft); letter-spacing: .06em; flex-wrap: wrap; }
-  .cal-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-  .cal-legend .lg-m { background: rgba(201,138,138,.72); }
-  .cal-legend .lg-p { background: transparent; border: 1.5px dashed rgba(201,138,138,.65); }
-  .cal-legend .lg-t { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(201,138,138,.85); }
+  .btn-moon-ghost:hover { background: rgba(255,250,241,.14); }
 
-  /* ── 月亮小屋 · 状态卡（首屏即状态 + 会说话的大按钮）── */
+  /* ── 月亮小屋 · 三模式（一句话 / 圆月亮 / 时间线）── */
+  .mn-modes { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+  .mn-mode {
+    font-family: inherit; cursor: pointer; border-radius: 999px;
+    border: 1px solid rgba(255,250,241,.32); background: rgba(255,250,241,.08);
+    color: rgba(255,250,241,.72); padding: 6px 16px; font-size: 12px; letter-spacing: .14em; text-indent: .14em;
+    transition: background .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .mn-mode:hover { background: rgba(255,250,241,.16); }
+  .mn-mode.on { background: rgba(255,250,241,.92); border-color: rgba(255,250,241,.92); color: #4a3f4d; }
   .mn-card { text-align: center; padding: 30px 22px 22px; }
+  .mn-view[hidden] { display: none; }
+  .mn-moon-ic { font-size: 30px; line-height: 1; margin-bottom: 10px; }
   .mn-big { font-size: 22px; color: var(--ink); letter-spacing: .14em; text-indent: .14em; line-height: 1.7; }
   .mn-big em { font-style: normal; color: var(--rose-deep); font-variant-numeric: tabular-nums; }
   .mn-sub { margin-top: 9px; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .06em; line-height: 1.9; }
@@ -587,6 +578,46 @@
   }
   .mn-main.go:hover { background: rgba(201,138,138,.16); }
   .mn-hint { margin-top: 11px; font-size: 11px; color: rgba(138,122,109,.62); letter-spacing: .08em; line-height: 1.8; }
+
+  /* 圆月亮：平时柔光月盘，拜访中染成玫瑰色，点盘=记今天 */
+  .dial {
+    width: min(238px, 66vw); aspect-ratio: 1; border-radius: 50%;
+    margin: 4px auto 2px; cursor: pointer; user-select: none; -webkit-user-select: none;
+    background: radial-gradient(circle at 36% 30%, #fff8ec, #f4e4ca 58%, #e7d2b2);
+    box-shadow: 0 16px 38px rgba(8,8,26,.35), inset -10px -16px 34px rgba(188,148,106,.24);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    animation: dialGlow 6s ease-in-out infinite alternate;
+    transition: transform .2s ease, background .5s ease;
+  }
+  .dial:active { transform: scale(.977); }
+  .dial.on {
+    background: radial-gradient(circle at 36% 30%, #ffece7, #efc4bc 55%, #dd9f96);
+    box-shadow: 0 16px 38px rgba(8,8,26,.35), inset -10px -16px 34px rgba(150,80,75,.28);
+  }
+  @keyframes dialGlow { from { filter: brightness(.97); } to { filter: brightness(1.05); } }
+  .dial-big { font-size: 21px; color: var(--ink); letter-spacing: .1em; text-indent: .1em; line-height: 1.6; padding: 0 26px; }
+  .dial-big em { font-style: normal; color: var(--rose-deep); font-size: 30px; font-variant-numeric: tabular-nums; }
+  .dial-sub { margin-top: 6px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: .05em; line-height: 1.8; padding: 0 30px; }
+  .dial-face { pointer-events: none; }
+
+  /* 时间线：圆点线 + 最近几条文字记录 */
+  .line-title { font-size: 12.5px; color: var(--ink-soft); letter-spacing: .22em; text-indent: .22em; }
+  .dots { display: flex; align-items: flex-start; justify-content: center; margin-top: 16px; }
+  .dot-col { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 44px; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; background: rgba(201,138,138,.85); box-shadow: 0 2px 6px rgba(185,111,111,.3); }
+  .dot.pred { background: transparent; border: 1.5px dashed rgba(201,138,138,.8); box-shadow: none; }
+  .dot-m { font-size: 10px; color: rgba(138,122,109,.78); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+  .dot-seg { width: 22px; height: 1.5px; background: rgba(201,138,138,.35); margin-top: 6px; }
+  .dots-sub { margin-top: 12px; font-size: 11.5px; color: rgba(138,122,109,.8); letter-spacing: .06em; line-height: 1.9; }
+  .line-recs { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .lrec {
+    font-family: inherit; cursor: pointer; width: 100%;
+    background: rgba(201,138,138,.07); border: 1px dashed rgba(201,138,138,.3); border-radius: 10px;
+    padding: 9px 12px; font-size: 12.5px; color: var(--ink);
+    letter-spacing: .03em; font-variant-numeric: tabular-nums; line-height: 1.7;
+  }
+  .lrec:hover { background: rgba(201,138,138,.13); }
+  .lrec b { font-weight: normal; color: var(--rose-deep); }
 
   /* ── 票根墙 ─────────────────────────── */
   .stubwall { display: flex; flex-direction: column; gap: 10px; }
@@ -993,35 +1024,53 @@
   </footer>
 </section>
 
-<!-- 篇章 · 月亮小屋（生理期小日历） -->
+<!-- 篇章 · 月亮小屋（生理期记录） -->
 <section class="subpage" id="page-moon">
   <header class="chap-head">
     <p class="chap-kicker">Moon House</p>
     <h1 class="chap-title">月亮小屋</h1>
     <p class="chap-sub">来了点一下，走了点一下，就这么简单</p>
     <p class="chap-meta" id="moonMeta"></p>
+    <div class="mn-modes" id="mnModes">
+      <button class="mn-mode" type="button" data-mode="mini">一句话</button>
+      <button class="mn-mode" type="button" data-mode="dial">圆月亮</button>
+      <button class="mn-mode" type="button" data-mode="line">时间线</button>
+    </div>
   </header>
   <div class="page-card mn-card">
     <span class="tape"></span>
-    <p class="mn-big" id="moonBig"></p>
-    <p class="mn-sub" id="moonSub"></p>
-    <button class="mn-main" id="moonMainBtn"></button>
-    <p class="mn-hint">记错了也不怕：下面的日历哪天都能改，改完 6 秒内还能撤销</p>
-  </div>
-  <div class="page-card cal-card">
-    <div class="cal-head">
-      <button class="cal-nav" id="calPrev" aria-label="上个月">‹</button>
-      <p class="cal-title" id="calTitle"></p>
-      <button class="cal-nav" id="calNext" aria-label="下个月">›</button>
+    <div class="mn-view" id="view-mini">
+      <p class="mn-moon-ic" aria-hidden="true">🌙</p>
+      <p class="mn-big" id="bigMini"></p>
+      <p class="mn-sub" id="subMini"></p>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div class="cal-legend"><span><i class="lg-m"></i>来访的日子</span><span><i class="lg-p"></i>预计的日子</span><span><i class="lg-t"></i>今天</span></div>
+    <div class="mn-view" id="view-dial" hidden>
+      <div class="dial" id="dial" role="button" tabindex="0" aria-label="点一下，记下今天">
+        <div class="dial-face">
+          <p class="dial-big" id="bigDial"></p>
+          <p class="dial-sub" id="subDial"></p>
+        </div>
+      </div>
+    </div>
+    <div class="mn-view" id="view-line" hidden>
+      <p class="line-title">最近几次来访</p>
+      <div class="dots" id="dots"></div>
+      <p class="dots-sub" id="dotsSub"></p>
+      <div class="line-recs" id="lineRecs"></div>
+    </div>
+    <button class="mn-main" id="moonMainBtn"></button>
+    <p class="mn-hint">点一下就记好今天；记错了 6 秒内能撤销，更早的记录在下面「过往记录」里改</p>
   </div>
   <div class="pocket">
-    <div class="pocket-head"><span class="pocket-name">过往记录</span><span class="pocket-line"></span><span class="pocket-count" id="moonCount"></span></div>
-    <div class="moon-recs" id="moonRecs"></div>
+    <div class="pocket-head" id="drawerHead" role="button" tabindex="0" aria-label="展开或收起过往记录">
+      <span class="pocket-name">过往记录</span><span class="pocket-line"></span><span class="pocket-count" id="moonCount"></span><span class="pocket-arrow" id="drawerArrow">展开 ›</span>
+    </div>
+    <div class="drawer" id="drawer" hidden>
+      <div class="moon-recs" id="moonRecs"></div>
+      <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记一次过去的来访</button>
+      <p class="moon-note">记录只存在这台手机的浏览器里，不上传、没有账号；<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就好。</p>
+    </div>
   </div>
-  <p class="moon-note">记录只存在这台手机的浏览器里，不上传、没有账号；<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就好。</p>
   <a class="cross-chip" href="#/">🏠 回家</a>
 </section>
 
@@ -1600,7 +1649,7 @@
      3) 票根墙：用掉一张券，往 TICKET_LOG 最上面加一条销账记录
         { date: '年-月-日', text: '用掉了什么券，一句话' }
      4) 情话签：QUOTES 随便加，一人一句往下排
-     5) 月亮小屋（生理期小日历）：不用预填数据，她自己点日历记；
+     5) 月亮小屋（生理期记录）：不用预填数据，她自己点大按钮记；
         记录存在她手机浏览器的 localStorage，正常天数阈值见下方「月亮小屋」段
      ══════════════════════════════════════════════════ */
   var JOURNAL = [
@@ -1832,10 +1881,11 @@
     $('#chipHomeMoon').textContent = '🌙 今晚 · ' + moonPhaseName();
   }
 
-  /* ── 月亮小屋 · 生理期记录 v3（数据只存本机 localStorage）──
-     交互按 Flo / Clue / 美柚 / 各极简款收敛出的同一答案重做：
-     · 首屏 = 状态卡 + 一个会说话的大按钮：点了就记「今天」，不弹窗不填表
-     · 日历只管补记和改错；删除即时生效 + 6 秒撤销，不再层层确认
+  /* ── 月亮小屋 · 生理期记录 v4（数据只存本机 localStorage）──
+     三种可切换模式（一句话 / 圆月亮 / 时间线），选择记在她手机里：
+     · 首屏 = 状态 + 一个会说话的大按钮：点了就记「今天」，不弹窗不填表
+     · 补录、改错、备份全收进「过往记录」抽屉，主界面只有状态+按钮
+     · 删除即时生效 + 6 秒撤销，不再层层确认
      · 忘了记「走」没关系：下次记「来」时按平均经期自动把上一次收好
      · 周期正常范围 21–35 天、经期 3–7 天，超出只温柔提醒不拦着
      · 预测至少 3 个周期才像样，不足时如实说「再记一次，就能估出下次的日子」
@@ -1994,14 +2044,23 @@
     }
   }
 
-  /* ── 月亮小屋 · 渲染与操作 ── */
-  var moonBig = $('#moonBig'), moonSub = $('#moonSub'),
+  /* ── 月亮小屋 · 渲染与操作（v4：三模式，无日历）── */
+  var moonBigMini = $('#bigMini'), moonSubMini = $('#subMini'),
+      dial = $('#dial'), moonBigDial = $('#bigDial'), moonSubDial = $('#subDial'),
+      dots = $('#dots'), dotsSub = $('#dotsSub'), lineRecs = $('#lineRecs'),
+      mnModes = $('#mnModes'),
       moonMain = $('#moonMainBtn'), moonMeta = $('#moonMeta'),
       moonRecs = $('#moonRecs'), moonCount = $('#moonCount'),
-      moonBackupBtn = $('#moonBackupBtn'),
-      calTitle = $('#calTitle'), calGrid = $('#calGrid'),
-      calPrev = $('#calPrev'), calNext = $('#calNext');
-  var calYear = 0, calMonth = 0; /* 日历当前显示的年月 */
+      moonBackupBtn = $('#moonBackupBtn'), moonBackfillBtn = $('#moonBackfillBtn'),
+      drawerHead = $('#drawerHead'), drawer = $('#drawer'), drawerArrow = $('#drawerArrow');
+
+  /* 模式记忆存在她手机里，默认最简单的「一句话」 */
+  var MODE_KEY = 'yulin_moon_mode';
+  var moonMode = 'mini';
+  try {
+    var mSaved = localStorage.getItem(MODE_KEY);
+    if (mSaved === 'mini' || mSaved === 'dial' || mSaved === 'line') moonMode = mSaved;
+  } catch (err) {}
 
   /* 改动前拍快照，撤销时整体还原（比逐条回滚可靠） */
   function snapPeriods() { return JSON.stringify(periods); }
@@ -2013,60 +2072,92 @@
     };
   }
 
-  function renderMoon() {
-    var act = activePeriod(), st = periodStats(), t = todayStr();
-    if (!calYear) {
-      var d0 = toDay(t);
-      calYear = d0.getFullYear();
-      calMonth = d0.getMonth();
-    }
+  /* 三种模式共用的状态文案：大按钮的文案本身就是说明书 */
+  function moonStatus() {
+    var t = todayStr();
+    var act = activePeriod(), st = periodStats();
     var dayN = act ? dayDiff(act.start, t) + 1 : 0;
-    /* 大按钮的文案本身就是说明书：看到就知道点什么 */
+    var s = { act: act, st: st, dayN: dayN, big: '', sub: '', dialBig: '', dialSub: '', btn: '', go: false };
     if (act && dayN <= PERIOD_LEN_LONG) {
-      moonBig.innerHTML = '月亮拜访中 · 今天第 <em>' + dayN + '</em> 天';
-      moonSub.textContent = dayN > PERIOD_LEN_OK
+      s.big = '月亮拜访中 · 今天第 <em>' + dayN + '</em> 天';
+      s.dialBig = '月亮拜访中<br>今天第 <em>' + dayN + '</em> 天';
+      s.sub = dayN > PERIOD_LEN_OK
         ? '已经 ' + dayN + ' 天了，一般来 3–7 天；要是其实已经走了，点下面记一下'
         : '走了那天，再点一下下面的按钮就好';
-      setMainBtn('月亮今天走了', true);
-    } else if (act) { /* 超过 10 天还没记「走」，多半是忘了 */
-      moonBig.textContent = '上一次好像忘了记走';
-      moonSub.textContent = '没关系，点下面直接记今天这个新的开始，上一次会自动收好';
-      setMainBtn('月亮今天来了', false);
+      s.dialSub = '走了那天，点这里或下面的按钮';
+      s.btn = '月亮今天走了'; s.go = true;
+    } else if (act) { /* 超过 10 天没记走，多半是忘了 */
+      s.big = '上一次好像忘了记走';
+      s.dialBig = '上一次好像<br>忘了记走';
+      s.sub = '没关系，点下面直接记今天这个新的开始，上一次会自动收好';
+      s.dialSub = '点一下月亮，开始新的一次';
+      s.btn = '月亮今天来了';
     } else if (periods.length) {
-      moonBig.textContent = '小屋静悄悄的';
+      s.big = '小屋静悄悄的';
+      s.dialBig = '小屋静悄悄的';
       if (st.next) {
         var dl = dayDiff(t, st.next);
-        if (dl < 0) moonSub.textContent = '预测的 ' + prettyShort(st.next) + ' 过了还没来——也很正常，再等等它';
-        else if (dl <= 2) moonSub.textContent = '预计就在这两天，留意身体的小信号';
-        else moonSub.textContent = '下次约在 ' + prettyShort(st.next) + ' 前后 · 还有 ' + dl + ' 天';
+        if (dl < 0) s.sub = '预测的 ' + prettyShort(st.next) + ' 过了还没来——也很正常，再等等它';
+        else if (dl <= 2) s.sub = '预计就在这两天，留意身体的小信号';
+        else s.sub = '下次约在 ' + prettyShort(st.next) + ' 前后 · 还有 ' + dl + ' 天';
+        s.dialSub = '下次约 ' + prettyShort(st.next) + ' 前后';
       } else {
-        moonSub.textContent = '再记一次，就能估出下次的日子';
+        s.sub = '再记一次，就能估出下次的日子';
+        s.dialSub = '再记一次，就能估下次的日子';
       }
-      setMainBtn('月亮今天来了', false);
+      s.btn = '月亮今天来了';
     } else {
-      moonBig.textContent = '月亮还没来过';
-      moonSub.textContent = '来的那天，点一下下面的按钮就记好了，不用填表';
-      setMainBtn('月亮今天来了', false);
+      s.big = '月亮还没来过';
+      s.dialBig = '月亮还没来过';
+      s.sub = '来的那天，点一下下面的按钮就记好了，不用填表';
+      s.dialSub = '来的那天，点一下月亮就好';
+      s.btn = '月亮今天来了';
     }
+    return s;
+  }
+
+  function renderMoon() {
+    var s = moonStatus();
+    moonBigMini.innerHTML = s.big;
+    moonSubMini.textContent = s.sub;
+    moonBigDial.innerHTML = s.dialBig;
+    moonSubDial.textContent = s.dialSub;
+    dial.classList.toggle('on', !!(s.act && s.dayN <= PERIOD_LEN_LONG));
+    renderDots(s);
+    moonMain.textContent = s.btn;
+    moonMain.classList.toggle('go', s.go);
     moonMeta.textContent = periods.length
       ? '已记 ' + periods.length + ' 次 · 数据只留在这台手机里'
       : '数据只留在这台手机里，不上传、没有账号';
     moonCount.textContent = periods.length ? periods.length + ' 次' : '虚位以待';
-    renderCalendar();
     renderMoonList();
     renderHomeLive();
   }
-  function setMainBtn(label, isGo) {
-    moonMain.textContent = label;
-    moonMain.classList.toggle('go', !!isGo);
+
+  /* 模式切换：一句话 / 圆月亮 / 时间线，选择记在她手机里 */
+  function setMode(m, keep) {
+    moonMode = m;
+    ['mini', 'dial', 'line'].forEach(function (k) {
+      document.getElementById('view-' + k).hidden = (k !== m);
+    });
+    var chips = mnModes.querySelectorAll('.mn-mode');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', chips[i].getAttribute('data-mode') === m);
+    }
+    if (!keep) { try { localStorage.setItem(MODE_KEY, m); } catch (err) {} }
   }
+  mnModes.addEventListener('click', function (e) {
+    var b = e.target.closest('.mn-mode');
+    if (b) setMode(b.getAttribute('data-mode'));
+  });
+  setMode(moonMode, true);
 
   function renderMoonList() {
     moonRecs.innerHTML = '';
     if (!periods.length) {
       var e = document.createElement('div');
       e.className = 'rec-empty';
-      e.textContent = '还没有记录。来的那天点一下大按钮就好；想补记过去的日子，点上面的日历。';
+      e.textContent = '还没有记录。来的那天点一下大按钮就好；想补记过去的，点下面的「补记一次过去的来访」。';
       moonRecs.appendChild(e);
       return;
     }
@@ -2085,6 +2176,50 @@
       row.addEventListener('click', function () { openRecSheet(p); });
       moonRecs.appendChild(row);
     });
+  }
+
+  /* 时间线视图：●=来过的月份 ○=预计，下面列最近三条可点改 */
+  function renderDots(s) {
+    var rec = periods.slice(0, 5).reverse(); /* 旧 → 新 */
+    var items = rec.map(function (p) {
+      return { pred: false, label: (toDay(p.start).getMonth() + 1) + '月' };
+    });
+    if (s.st.next) {
+      items.push({ pred: true, label: '约' + (toDay(s.st.next).getMonth() + 1) + '月' });
+    }
+    dots.innerHTML = '';
+    lineRecs.innerHTML = '';
+    if (!items.length) {
+      dotsSub.textContent = '还没有记录，来的那天点下面的按钮就好';
+      return;
+    }
+    var html = '';
+    items.forEach(function (it, i) {
+      if (i) html += '<span class="dot-seg"></span>';
+      html += '<span class="dot-col"><span class="dot' + (it.pred ? ' pred' : '') + '"></span>'
+            + '<span class="dot-m">' + it.label + '</span></span>';
+    });
+    dots.innerHTML = html;
+    dotsSub.textContent = s.st.next
+      ? '实心是来过的月份，空心是预计 · 下次约 ' + prettyShort(s.st.next)
+      : '实心是来过的月份 · 再记一次就能估出下次';
+    periods.slice(0, 3).forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lrec';
+      b.innerHTML = p.end
+        ? '<b>' + prettyShort(p.start) + ' – ' + prettyShort(p.end) + '</b> · ' + (dayDiff(p.start, p.end) + 1) + ' 天 · 点这行能改'
+        : '<b>' + prettyShort(p.start) + ' 开始 · 进行中</b> · 点这行能改';
+      b.addEventListener('click', function () { openRecSheet(p); });
+      lineRecs.appendChild(b);
+    });
+    if (periods.length > 3) {
+      var more = document.createElement('p');
+      more.className = 'dots-sub';
+      more.style.marginTop = '6px';
+      more.textContent = '更早的记录在「过往记录」里';
+      lineRecs.appendChild(more);
+    }
   }
 
   /* ── 大按钮：一键记「今天来了 / 今天走了」，不弹窗不填表 ── */
@@ -2109,7 +2244,7 @@
         if (dayDiff(estEnd, t) <= 0) estEnd = addDaysStr(t, -1);
         if (dayDiff(act.start, estEnd) < 0) estEnd = act.start;
         act.end = estEnd;
-        note = '（上一次帮你按 ' + (dayDiff(act.start, estEnd) + 1) + ' 天收好了，可去日历改）';
+        note = '（上一次帮你按 ' + (dayDiff(act.start, estEnd) + 1) + ' 天收好了，可在「过往记录」里改）';
       }
       periods.unshift({ start: t, end: null });
       periods.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
@@ -2120,19 +2255,27 @@
     }
   }
   moonMain.addEventListener('click', logToday);
-  calPrev.addEventListener('click', function () {
-    calMonth--;
-    if (calMonth < 0) { calMonth = 11; calYear--; }
-    renderCalendar();
-  });
-  calNext.addEventListener('click', function () {
-    calMonth++;
-    if (calMonth > 11) { calMonth = 0; calYear++; }
-    renderCalendar();
+  dial.addEventListener('click', logToday);
+  dial.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logToday(); }
   });
 
-  /* ── 日历：点哪天记哪天 ── */
-  var CAL_AHEAD = 4; /* 最多往后翻几个月看预测 */
+  /* 过往记录抽屉：补录、改错、备份都收在这里，平时收起 */
+  function setDrawer(open) {
+    drawer.hidden = !open;
+    drawerArrow.textContent = open ? '收起 ›' : '展开 ›';
+  }
+  drawerHead.addEventListener('click', function () { setDrawer(drawer.hidden); });
+  drawerHead.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDrawer(drawer.hidden); }
+  });
+  moonBackfillBtn.addEventListener('click', function () {
+    var st = periodStats(), t = todayStr();
+    /* 默认填「按周期推下来的上次估计日子」，比让它从今天猜更顺手 */
+    askBackfill(st.next && dayDiff(t, st.next) <= 0 ? st.next : t);
+  });
+
+  /* ── 查询小工具 ── */
   function periodAt(ds) {
     for (var i = 0; i < periods.length; i++) {
       var p = periods[i];
@@ -2140,71 +2283,8 @@
     }
     return null;
   }
-  function dayMark(ds) {
-    var p = periodAt(ds);
-    if (!p) return null;
-    var t = todayStr();
-    if (ds === p.start) return p.end ? 'cap' : 'open';
-    if (p.end && ds === p.end) return 'cap';
-    return (p.end || t) >= ds ? 'mid' : null;
-  }
   function prettyRange(p) {
     return p.end ? prettyShort(p.start) + ' – ' + prettyShort(p.end) : prettyShort(p.start) + ' 开始 · 进行中';
-  }
-  function predictedDays() {
-    var st = periodStats(), out = {};
-    if (!st.next) return out;
-    var len = st.avgLen || 1;
-    for (var i = 0; i < len; i++) out[addDaysStr(st.next, i)] = true;
-    return out;
-  }
-  function renderCalendar() {
-    var t = todayStr();
-    calTitle.textContent = calYear + ' 年 ' + (calMonth + 1) + ' 月';
-    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    var lead = new Date(calYear, calMonth, 1).getDay();
-    var wds = ['日', '一', '二', '三', '四', '五', '六'];
-    var html = '';
-    for (var w = 0; w < 7; w++) html += '<span class="cal-wd">' + wds[w] + '</span>';
-    for (var b = 0; b < lead; b++) html += '<span class="cal-day blank"></span>';
-    var pred = predictedDays();
-    for (var d = 1; d <= daysInMonth; d++) {
-      var ds = calYear + '-' + pad2(calMonth + 1) + '-' + pad2(d);
-      var cls = 'cal-day';
-      var isFuture = dayDiff(t, ds) > 0;
-      if (isFuture) cls += ' future';
-      if (ds === t) cls += ' today';
-      var mark = dayMark(ds);
-      if (mark === 'cap') cls += ' marked cap';
-      else if (mark === 'open') cls += ' mark-open';
-      else if (mark === 'mid') cls += ' marked';
-      else if (pred[ds]) cls += ' pred';
-      html += '<button type="button" class="' + cls + '" data-d="' + ds + '"' + (isFuture ? ' disabled' : '') + '>' + d + '</button>';
-    }
-    calGrid.innerHTML = html;
-    var btns = calGrid.querySelectorAll('.cal-day[data-d]');
-    for (var i = 0; i < btns.length; i++) {
-      (function (btn) {
-        btn.addEventListener('click', function () { openDaySheet(btn.getAttribute('data-d')); });
-      })(btns[i]);
-    }
-    var cur = new Date(calYear, calMonth, 1);
-    if (periods.length) {
-      var oldest = toDay(periods[periods.length - 1].start);
-      calPrev.disabled = new Date(oldest.getFullYear(), oldest.getMonth(), 1) >= cur;
-    } else {
-      calPrev.disabled = false;
-    }
-    var nowD = toDay(t);
-    calNext.disabled = cur >= new Date(nowD.getFullYear(), nowD.getMonth() + CAL_AHEAD, 1);
-  }
-  /* ── 日历点按：今天=一键开关；过去没记的=补记；已记的=改/删 ── */
-  function openDaySheet(ds) {
-    var t = todayStr();
-    if (dayDiff(t, ds) > 0) return; /* 未来的日子只能看，不能记 */
-    if (ds === t) { logToday(); return; }
-    if (!dayMark(ds)) { askBackfill(ds); return; }
-    openRecSheet(periodAt(ds));
   }
   function askBackfill(ds) {
     var t = todayStr();
@@ -2219,7 +2299,8 @@
       noText: '点错了',
       onYes: function (v) {
         if (!v[0]) { sheetWarn.textContent = '来的日子不能空'; return false; }
-        if (periodAt(v[0])) { sheetWarn.textContent = '这天已经有记录了，点日历上那天可以直接改'; return false; }
+        if (dayDiff(todayStr(), v[0]) > 0) { sheetWarn.textContent = '补记的日子不能是未来哦'; return false; }
+        if (periodAt(v[0])) { sheetWarn.textContent = '这天已经有记录了，在「过往记录」里点那条可以直接改'; return false; }
         if (v[1] && dayDiff(v[0], v[1]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
         for (var k = 0; k < periods.length; k++) {
           var q = periods[k];
