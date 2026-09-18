@@ -754,26 +754,45 @@
   /* ── 宠物屋（四只小家伙，谁上岗她说了算）── */
   .pet-card { text-align: center; padding: 26px 22px 22px; }
   .pet-stage {
-    position: relative; height: 190px; margin: 4px 0 2px; cursor: pointer; user-select: none;
+    position: relative; height: 210px; margin: 4px 0 2px; cursor: pointer; user-select: none;
     -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
-    display: flex; align-items: flex-end; justify-content: center;
+    overflow: hidden;
   }
-  .pet-stage::after {
-    content: ""; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-    width: 128px; height: 16px; border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(120,90,60,.22), transparent 70%);
+  .pet-stage::after { content: none; }
+  /* 影子跟着小家伙走 */
+  .pet-actor::after {
+    content: ""; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+    width: 62%; height: 9px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,90,60,.25), transparent 70%);
   }
-  .pet-body {
-    position: relative; z-index: 1; font-size: 86px; line-height: 1.15;
-    animation: petBreathe 3.2s ease-in-out infinite;
-    transform-origin: 50% 90%;
+  /* 小家伙在舞台里自己走动 */
+  .pet-actor {
+    position: absolute; bottom: 12px; left: 50%; margin-left: -30px;
+    width: 60px; height: 60px;
+    will-change: transform;
   }
-  .pet-body.hop { animation: petHop .55s ease; }
-  @keyframes petBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.055) translateY(-2px); } }
-  @keyframes petHop {
-    0% { transform: none; } 30% { transform: translateY(-16px) rotate(-5deg) scale(1.04); }
-    60% { transform: translateY(0) scale(.97, .94); } 100% { transform: none; }
+  .pet-flip { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .pet-flip.face-l { transform: scaleX(-1); }
+  .pet-sprite {
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    background-repeat: no-repeat;
   }
+  .pet-emoji { font-size: 44px; line-height: 1.1; animation: petBreathe 3.2s ease-in-out infinite; }
+  .pet-sprite[hidden], .pet-emoji[hidden] { display: none; }
+  /* 嘎嘎（单帧）：走时摇摆、站时呼吸；多帧动物不需要 */
+  .pet-flip.waddle .pet-sprite { animation: duckWaddle .42s ease-in-out infinite alternate; transform-origin: 50% 92%; }
+  .pet-flip.breathe .pet-sprite { animation: petBreatheSoft 2.8s ease-in-out infinite; transform-origin: 50% 92%; }
+  @keyframes petBreatheSoft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+  @keyframes duckWaddle { from { transform: rotate(-7deg) translateY(0); } to { transform: rotate(7deg) translateY(-2px); } }
+  .pet-food {
+    position: absolute; bottom: 20px; left: 50%; margin-left: 40px;
+    font-size: 22px; z-index: 2;
+    animation: foodBob 1s ease-in-out infinite alternate;
+  }
+  .pet-food[hidden] { display: none; }
+  .pet-food.eating { animation: foodEat .9s ease forwards; }
+  @keyframes foodBob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+  @keyframes foodEat { to { transform: scale(0); opacity: 0; } }
   .pet-bubble {
     position: absolute; left: 50%; top: 4px; transform: translateX(-46%);
     max-width: 78%; background: var(--paper); border-radius: 14px; padding: 8px 13px;
@@ -787,7 +806,7 @@
   .pet-bubble:not([hidden]) { animation: bubbleIn .3s ease; }
   @keyframes bubbleIn { from { opacity: 0; transform: translateX(-46%) translateY(6px) scale(.92); } to { opacity: 1; } }
   .pet-zzz {
-    position: absolute; right: 24%; top: 26%; z-index: 2;
+    position: absolute; right: -4px; top: -6px; z-index: 2;
     font-size: 15px; color: var(--ink-soft); font-style: italic;
     animation: zzzFloat 2.6s ease-in-out infinite;
   }
@@ -1160,8 +1179,14 @@
     <span class="tape"></span>
     <div class="pet-stage" id="petStage" role="button" tabindex="0" aria-label="戳戳它">
       <div class="pet-bubble" id="petBubble" hidden></div>
-      <div class="pet-body" id="petBody">🐱</div>
-      <span class="pet-zzz" id="petZzz" hidden>z</span>
+      <div class="pet-actor" id="petActor">
+        <div class="pet-flip" id="petFlip">
+          <div class="pet-sprite" id="petSprite" hidden></div>
+          <div class="pet-emoji" id="petBody">🐱</div>
+        </div>
+        <span class="pet-zzz" id="petZzz" hidden>z</span>
+      </div>
+      <div class="pet-food" id="petFood" hidden>🍪</div>
     </div>
     <p class="pet-name" id="petName"></p>
     <p class="pet-breed" id="petBreed"></p>
@@ -2556,7 +2581,9 @@
   var petBody = $('#petBody'), petName = $('#petName'), petBreed = $('#petBreed'),
       petState = $('#petState'), petFeedBtn = $('#petFeedBtn'), petBubble = $('#petBubble'),
       petRoster = $('#petRoster'), petMeta = $('#petMeta'), petStageEl = $('#petStage'),
-      petZzz = $('#petZzz');
+      petZzz = $('#petZzz'),
+      petActor = $('#petActor'), petFlip = $('#petFlip'), petSprite = $('#petSprite'),
+      petFoodEl = $('#petFood');
   var bubbleTimer = null;
   function curPet() {
     for (var i = 0; i < PETS.length; i++) if (PETS[i].id === petS.active) return PETS[i];
@@ -2564,11 +2591,159 @@
   }
   function petStageIdx() { return petS.growth >= 90 ? 2 : petS.growth >= 30 ? 1 : 0; }
 
+  /* ── 像素小动物引擎 ──
+     换帧机制魔改自 oneko.js（MIT，github.com/adryd325/oneko.js）。
+     素材：oneko.gif（1990 经典像素猫，公有领域性质）/ oneko-dog.gif（spicetify-oneko，MIT）/
+     Chrome 离线小恐龙 sprite（Chromium，BSD-3 风格许可，保留声明）/
+     Duck Sprite（SharkusMK，免署名可商用）。全部 base64 内嵌，无外链。 */
+  var SPR_ONEKO = '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';
+  var SPR_DOG = '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';
+  var SPR_DINO = 'iVBORw0KGgoAAAANSUhEUgAAALAAAAAvCAYAAABDh0DIAAAB7UlEQVR42u2dMZKFIBAFxy0T70fo8Qz1fIa7kQm1CAqjDtOd/r9Wl8u8GgH5gyix7/tvy+tN0zSIIvja9P0RAMOM2pU2z3PV9ZZlkSeTAV9bviQwmGbQqrjaSktVXuteDV/bvuNTlbKuq4iIhBBMVPbhe2DF2wqtxgMtxAkhBAaut4e4s8EA0Ho8jNzK8jYCHCew14QAXeiBgQEMwAAGsNgDay9lesfa/b3qSwJDHwkcb7q4uqR4d7tcaokxt7T5lm/pUuy2bZ/wtXZ/r/qSwGA7gePNFld6kP+qrHTTxt3eDF98SWDwOwtRU2Xywqst+PbtSwJDXwl8VE/uKbK2yuK/v9sD4evblwSGPnvg1FNoq/7muG6r6+Hr05cEhr5nIVq/jKe9Vo+vL18SGNiNJh8+0gjfvn1JYLCdwMeI1zqAQqtC8cX3lRZC6wQYfH36jiQFvpZ96YFBujzcr3XlxfN7Xz9EDl8bviQw9H28am3laScDvr59SWDwkcBSuG8z9/nTPyaSe8sVX13fs++1cCeBQbreCxHPB8ZJEO8TTSXFUxPrsW9u4jzV0+Hb1vdsl1mNOwkMPnaj5SoqV5nCEqtLX21/Ehh87Qe+WlHxW61vJUqpB766viQwgDzwQ4dvvyFQ6oGv7f8zCQym+QMPDinULMOyqAAAAABJRU5ErkJggg==';
+  var SPR_DUCK = 'iVBORw0KGgoAAAANSUhEUgAAACQAAAAgCAYAAAB6kdqOAAABK0lEQVR42mNkIAD+n2n4j0+e0aSBkYGKgIlhkAEWXBKKioqQkHl9FkVcKesKAwMDA8O9aTooIUitkBp0IYTTV+9zGFDSjoC3L36DPDcP8xBCDxHWp3IoCn9LP8IeUqLGDMM6DbHAQgYWIqefvoNKvUNRaMogR5SBuMotYkNw6OQydPBxFTOKz/l4vVDSEByglVvoaQ0DQNV/+rxtiIcQekhhhBCukMEVUmghwx/2l3Fo1WVEA1jIEAopAiEz9Gp7ikOKQG5CD5kREEIEyiFCITP8QgjmY3h5REDd8Gsxklq3oYNzPZwMDAwMDEYl34lKO4M2hCgG+814/u834/lPrPiQC6FRB9GsHLrhLPqfgYGB4fnn7xhpZ2T0XIkNEUJAkhdSHmnsfT00yyEArZ1y+3HEi3MAAAAASUVORK5CYII=';
+  var ACTORS = {
+    niannian: { sheet: SPR_ONEKO, mime: 'gif', fw: 32, fh: 32, sheetW: 256, sheetH: 128, scale: 3.2, dirByFrame: true, frameMs: 110, speed: 7,
+      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[3,3]], alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } },
+    gaga: { sheet: SPR_DUCK, mime: 'png', fw: 36, fh: 32, sheetW: 36, sheetH: 32, scale: 3.4, dirByFrame: false, faceLeft: true, waddle: true, solo: true, frameMs: 130, speed: 5,
+      acts: { walkR: [[0,0]], walkL: [[0,0]], idle: [[0,0]], alert: [[0,0]], sleep: [[0,0]], happy: [[0,0]] } },
+    tiaotiao: { sheet: SPR_DINO, mime: 'png', fw: 44, fh: 47, sheetW: 176, sheetH: 47, scale: 2.8, dirByFrame: false, frameMs: 140, speed: 6,
+      acts: { walkR: [[2,0],[3,0]], walkL: [[2,0],[3,0]], idle: [[0,0],[0,0],[0,0],[1,0]], alert: [[0,0]], sleep: [[1,0]], happy: [[0,0]] } },
+    dundun: { sheet: SPR_DOG, mime: 'gif', fw: 32, fh: 32, sheetW: 256, sheetH: 128, scale: 3.2, dirByFrame: true, frameMs: 110, speed: 7,
+      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[3,3]], alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } }
+  };
+  /* 恐龙：站定时约 1.7 秒眨一次眼（原版 WAITING 帧节奏） */
+  ACTORS.tiaotiao.acts.idle = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[1,0]];
+
+  var petEng = { actor: null, actorId: '', state: 'idle', stateUntil: 0, target: null,
+                 dir: 1, x: 0, fi: 0, lastFrame: 0, eatPending: false };
+  function petStageRange() {
+    var w = petStageEl.clientWidth || 340;
+    return Math.max(60, w / 2 - 50);
+  }
+  function petIsNight() { var h = new Date().getHours(); return h >= 23 || h < 5; }
+  function petApplySize(a) {
+    var s = a.scale * [0.72, 0.88, 1][petStageIdx()];
+    petEng.drawScale = s;
+    var w = Math.round(a.fw * s), h = Math.round(a.fh * s);
+    petSprite.style.width = w + 'px';
+    petSprite.style.height = h + 'px';
+    petSprite.style.backgroundSize = Math.round(a.sheetW * s) + 'px ' + Math.round(a.sheetH * s) + 'px';
+  }
+  function petSetActor(p) {
+    var a = ACTORS[p.id];
+    petEng.actor = a; petEng.actorId = p.id;
+    petSprite.style.backgroundImage = 'url(data:image/' + a.mime + ';base64,' + a.sheet + ')';
+    petSprite.hidden = false;
+    petBody.hidden = true;
+    petFlip.classList.remove('waddle');
+    petFlip.classList.remove('breathe');
+    petEng.x = 0;
+    petActor.style.transform = 'translateX(0px)';
+    petApplySize(a);
+    petStateGo('idle', 1200);
+  }
+  function petSetAct(name) {
+    var a = petEng.actor, act = a.acts[name] || a.acts.happy;
+    var f = act[petEng.fi % act.length];
+    var k = petEng.drawScale || a.scale;
+    petSprite.style.backgroundPosition = (-f[0] * a.fw * k) + 'px ' + (-f[1] * a.fh * k) + 'px';
+  }
+  function petStateGo(s, ms, target) {
+    petEng.state = s;
+    petEng.stateUntil = performance.now() + (ms || 0);
+    petEng.target = s === 'walk' && target != null ? target : null;
+  }
+  function petNextState() {
+    var r = Math.random();
+    if (petEng.state === 'sleep' || petEng.state === 'eat' || petEng.state === 'alert') {
+      petStateGo('idle', 1000 + Math.random() * 1500);
+      return;
+    }
+    var range = petStageRange();
+    if (r < 0.6) {
+      petEng.dir = Math.random() < 0.5 ? -1 : 1;
+      petStateGo('walk', 12000, (Math.random() * 1.5 - 0.75) * range);
+    } else if (r < 0.85) {
+      petStateGo('idle', 1800 + Math.random() * 2600);
+    } else {
+      petStateGo('sleep', 5000 + Math.random() * 5000);
+    }
+  }
+  function petArrive() {
+    if (petEng.eatPending) {
+      petEng.eatPending = false;
+      petStateGo('eat', 1300);
+      petFoodEl.classList.add('eating');
+      setTimeout(function () { petFoodEl.hidden = true; petFoodEl.classList.remove('eating'); }, 950);
+      celebrate(petActor);
+      petTalk();
+      showUndo(curPet().name + ' 吃得津津有味 · 成长 +10', null);
+    } else {
+      petStateGo('idle', 1200 + Math.random() * 2200);
+    }
+  }
+  function petEngineTick(ts) {
+    requestAnimationFrame(petEngineTick);
+    if (!petEng.actor) return;
+    if (ts - petEng.lastFrame < (petEng.actor.frameMs || 120)) return;
+    petEng.lastFrame = ts;
+    petEng.fi++;
+    var a = petEng.actor;
+    var now = performance.now();
+    if (petEng.state === 'walk') {
+      petSetAct(petEng.dir > 0 ? 'walkR' : 'walkL');
+      petEng.x += petEng.dir * a.speed;
+      var range = petStageRange();
+      var arrived = petEng.target != null &&
+        ((petEng.dir > 0 && petEng.x >= petEng.target) || (petEng.dir < 0 && petEng.x <= petEng.target));
+      if (arrived) {
+        petEng.x = petEng.target;
+        petActor.style.transform = 'translateX(' + (petEng.x - petSprite.offsetWidth / 2) + 'px)';
+        petArrive();
+      } else if (petEng.x > range || petEng.x < -range) {
+        petEng.x = Math.max(-range, Math.min(range, petEng.x));
+        petActor.style.transform = 'translateX(' + (petEng.x - petSprite.offsetWidth / 2) + 'px)';
+        petStateGo('idle', 1500 + Math.random() * 2500);
+      } else {
+        petActor.style.transform = 'translateX(' + (petEng.x - petSprite.offsetWidth / 2).toFixed(1) + 'px)';
+      }
+    } else {
+      petSetAct(petEng.state === 'sleep' ? 'sleep'
+              : petEng.state === 'alert' ? 'alert'
+              : petEng.state === 'eat' ? (a.acts.eat ? 'eat' : 'happy')
+              : 'idle');
+      if (petIsNight() && petEng.state !== 'sleep' && now > petEng.stateUntil) petStateGo('sleep', 3600000);
+      else if (now > petEng.stateUntil) petNextState();
+    }
+    var walking = petEng.state === 'walk';
+    petFlip.classList.toggle('face-l', (petEng.dir < 0) !== !!a.faceLeft);
+    petFlip.classList.toggle('waddle', walking && !!a.waddle);
+    petFlip.classList.toggle('breathe', !walking && !!a.solo);
+    petZzz.hidden = petEng.state !== 'sleep';
+  }
+  requestAnimationFrame(petEngineTick);
+  function petFeedNow() {
+    var range = petStageRange();
+    var fx = (Math.random() * 1.3 - 0.65) * range;
+    petFoodEl.hidden = false;
+    petFoodEl.classList.remove('eating');
+    petFoodEl.style.marginLeft = fx + 'px';
+    petEng.eatPending = true;
+    petEng.dir = fx > petEng.x ? 1 : -1;
+    petStateGo('walk', 9000, fx - petEng.dir * 14); /* 停在零食旁边，脸对着它 */
+  }
   function renderPet() {
     var p = curPet(), st = petStageIdx();
-    petBody.textContent = p.ic;
     petName.textContent = p.name;
     petBreed.textContent = p.breed + ' · ' + STAGE_NAMES[st];
+    if (petEng.actorId !== p.id) petSetActor(p);
+    else petApplySize(petEng.actor); /* 喂饱了当场长大 */
+    petMeta.textContent = '四只轮班上岗 · 换着玩，新鲜感常在';
+    renderRoster();
+    renderHomeLive();
+    petRenderMeta();
+  }
+  function petRenderMeta() {
+    var p = curPet(), st = petStageIdx();
     var act = activePeriod();
     if (act) {
       petState.textContent = '老巫婆来了，' + p.name + ' 叼来了小毯子和热水袋，让你们好好休息';
@@ -2578,15 +2753,10 @@
     } else {
       petState.textContent = '已经长大成人啦 · 成长 ' + petS.growth + '，继续投喂也不嫌多';
     }
-    var h = new Date().getHours();
-    petZzz.hidden = !(h >= 23 || h < 5);
     petFeedBtn.textContent = petS.snacks > 0
       ? '投喂一颗零食（还剩 ' + petS.snacks + ' 颗）'
       : '零食见底啦，明天开门再来领';
     petFeedBtn.classList.toggle('go', petS.snacks <= 0);
-    petMeta.textContent = '四只轮班上岗 · 换着玩，新鲜感常在';
-    renderRoster();
-    renderHomeLive();
   }
   function renderRoster() {
     petRoster.innerHTML = '';
@@ -2614,9 +2784,6 @@
     bubbleTimer = setTimeout(function () { petBubble.hidden = true; }, 2600);
   }
   petStageEl.addEventListener('click', function () {
-    petBody.classList.remove('hop');
-    void petBody.offsetWidth;
-    petBody.classList.add('hop');
     petTalk();
     try { popSound(); } catch (err) {}
     var r = petStageEl.getBoundingClientRect();
@@ -2625,7 +2792,8 @@
         setTimeout(function () { spawnHeart(r.left + r.width / 2 + (Math.random() * 70 - 35), r.top + 70, true); }, k * 70);
       })(i);
     }
-    if (petS.petted < 5) { petS.petted++; petS.growth++; savePetState(); renderPet(); }
+    if (petEng.state !== 'eat') petStateGo('alert', 900);
+    if (petS.petted < 5) { petS.petted++; petS.growth++; savePetState(); petRenderMeta(); }
   });
   petStageEl.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petStageEl.click(); }
@@ -2635,10 +2803,8 @@
     petS.snacks--;
     petS.growth += 10;
     savePetState();
-    renderPet();
-    celebrate(petFeedBtn);
-    petTalk();
-    showUndo(curPet().name + ' 吃得津津有味 · 成长 +10', null);
+    petRenderMeta();
+    petFeedNow();
   });
 
   function renderHomeLive() {
