@@ -250,6 +250,8 @@
   .pt-name { font-size: 16.5px; color: var(--ink); letter-spacing: .1em; }
   .pt-sub { margin-top: 5px; font-size: 11px; color: var(--ink-soft); letter-spacing: .14em; }
   .prop-moon { display: flex; align-items: center; gap: 16px; }
+  .prop-pet { display: flex; align-items: center; gap: 14px; }
+  .pp-paw { font-size: 34px; animation: petBreathe 3.2s ease-in-out infinite; }
   .pm-moon {
     width: 56px; height: 56px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #fff8e9, #f5dfae 62%, #eed6a0);
@@ -749,6 +751,68 @@
   }
   .moon-bak:hover { color: rgba(255,250,241,.95); }
 
+  /* ── 宠物屋（四只小家伙，谁上岗她说了算）── */
+  .pet-card { text-align: center; padding: 26px 22px 22px; }
+  .pet-stage {
+    position: relative; height: 190px; margin: 4px 0 2px; cursor: pointer; user-select: none;
+    -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .pet-stage::after {
+    content: ""; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 128px; height: 16px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(120,90,60,.22), transparent 70%);
+  }
+  .pet-body {
+    position: relative; z-index: 1; font-size: 86px; line-height: 1.15;
+    animation: petBreathe 3.2s ease-in-out infinite;
+    transform-origin: 50% 90%;
+  }
+  .pet-body.hop { animation: petHop .55s ease; }
+  @keyframes petBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.055) translateY(-2px); } }
+  @keyframes petHop {
+    0% { transform: none; } 30% { transform: translateY(-16px) rotate(-5deg) scale(1.04); }
+    60% { transform: translateY(0) scale(.97, .94); } 100% { transform: none; }
+  }
+  .pet-bubble {
+    position: absolute; left: 50%; top: 4px; transform: translateX(-46%);
+    max-width: 78%; background: var(--paper); border-radius: 14px; padding: 8px 13px;
+    font-size: 12.5px; color: var(--ink); letter-spacing: .04em; line-height: 1.7;
+    box-shadow: 0 8px 20px rgba(8,8,26,.28); z-index: 2; text-align: center;
+  }
+  .pet-bubble::after {
+    content: ""; position: absolute; left: 34%; bottom: -7px;
+    border: 7px solid transparent; border-top-color: var(--paper); border-bottom: none;
+  }
+  .pet-bubble:not([hidden]) { animation: bubbleIn .3s ease; }
+  @keyframes bubbleIn { from { opacity: 0; transform: translateX(-46%) translateY(6px) scale(.92); } to { opacity: 1; } }
+  .pet-zzz {
+    position: absolute; right: 24%; top: 26%; z-index: 2;
+    font-size: 15px; color: var(--ink-soft); font-style: italic;
+    animation: zzzFloat 2.6s ease-in-out infinite;
+  }
+  @keyframes zzzFloat { 0% { opacity: 0; transform: translate(0, 6px); } 35% { opacity: .9; } 100% { opacity: 0; transform: translate(10px, -18px); } }
+  .pet-name { margin-top: 14px; font-size: 20px; color: var(--ink); letter-spacing: .2em; text-indent: .2em; }
+  .pet-breed { margin-top: 4px; font-size: 11.5px; color: rgba(138,122,109,.8); letter-spacing: .1em; }
+  .pet-state { margin-top: 9px; font-size: 12.5px; color: var(--ink-soft); letter-spacing: .05em; line-height: 1.9; min-height: 2em; }
+  .pet-roster { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pet-chip {
+    position: relative; text-align: center; cursor: pointer;
+    background: var(--paper); border-radius: 12px; padding: 14px 10px 12px;
+    box-shadow: 0 10px 24px rgba(8,8,26,.38);
+    border: 2px solid transparent; transition: transform .15s ease, border-color .25s ease;
+  }
+  .pet-chip:active { transform: scale(.97); }
+  .pet-chip.on { border-color: rgba(201,138,138,.75); }
+  .pet-chip.on::after {
+    content: "在岗"; position: absolute; top: 8px; right: 8px;
+    font-size: 10px; color: #fff; background: rgba(201,138,138,.85);
+    border-radius: 999px; padding: 2px 8px; letter-spacing: .1em;
+  }
+  .pc-ic { font-size: 34px; line-height: 1.2; }
+  .pc-name { margin-top: 5px; font-size: 14px; color: var(--ink); letter-spacing: .12em; }
+  .pc-line { margin-top: 4px; font-size: 11px; color: rgba(138,122,109,.85); line-height: 1.7; }
+
   /* ── 确认弹层 & 撤销提示 ─────────────────────────── */
   .sheet-mask {
     position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center;
@@ -1017,6 +1081,16 @@
     <span class="h-enter">推开月亮小屋的门 →</span>
   </a>
 
+  <a class="h-chap h-rv" href="#/pet">
+    <div class="hc-head"><span class="hc-no">伍</span><h2 class="hc-name">宠物屋</h2></div>
+    <p class="hc-quote">家里添了几只小家伙，今天轮到谁上岗？</p>
+    <div class="h-prop prop-pet">
+      <span class="pp-paw">🐾</span>
+      <p class="pm-state" id="livePet">还没有小家伙上岗</p>
+    </div>
+    <span class="h-enter">去宠物屋撸一圈 →</span>
+  </a>
+
   <footer class="h-foot h-rv">
     <div class="h-divider"><span class="line"></span><span style="color:var(--rose);font-size:12px">♥</span><span class="line"></span></div>
     <p class="h-foot-line">想我们的时候，随便推一扇门进来。</p>
@@ -1070,6 +1144,34 @@
       <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记过去的一次</button>
       <p class="moon-note">记录只存在这台手机的浏览器里，不上传、没有账号；<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就好。</p>
     </div>
+  </div>
+  <a class="cross-chip" href="#/">🏠 回家</a>
+</section>
+
+<!-- 篇章 · 宠物屋（家里的小家伙们） -->
+<section class="subpage" id="page-pet">
+  <header class="chap-head">
+    <p class="chap-kicker">Pet House</p>
+    <h1 class="chap-title">宠物屋</h1>
+    <p class="chap-sub">家里添了几只小家伙，今天轮到谁上岗？</p>
+    <p class="chap-meta" id="petMeta"></p>
+  </header>
+  <div class="page-card pet-card">
+    <span class="tape"></span>
+    <div class="pet-stage" id="petStage" role="button" tabindex="0" aria-label="戳戳它">
+      <div class="pet-bubble" id="petBubble" hidden></div>
+      <div class="pet-body" id="petBody">🐱</div>
+      <span class="pet-zzz" id="petZzz" hidden>z</span>
+    </div>
+    <p class="pet-name" id="petName"></p>
+    <p class="pet-breed" id="petBreed"></p>
+    <p class="pet-state" id="petState"></p>
+    <button class="mn-main" id="petFeedBtn"></button>
+    <p class="mn-hint">零食来自你们的小日子：每天开门、记一笔老巫婆，都会掉粮；戳戳它也会开心</p>
+  </div>
+  <div class="pocket">
+    <div class="pocket-head"><span class="pocket-name">小家伙们</span><span class="pocket-line"></span><span class="pocket-count">4 位在编</span></div>
+    <div class="pet-roster" id="petRoster"></div>
   </div>
   <a class="cross-chip" href="#/">🏠 回家</a>
 </section>
@@ -1139,6 +1241,7 @@
   <a class="dock-item" href="#/daily" data-route="daily"><span class="d-ic" aria-hidden="true">📖</span><span class="d-tx">日常</span></a>
   <a class="dock-item" href="#/tickets" data-route="tickets"><span class="d-ic" aria-hidden="true">🎟️</span><span class="d-tx">票亭</span></a>
   <a class="dock-item" href="#/moon" data-route="moon"><span class="d-ic" aria-hidden="true">🌙</span><span class="d-tx">月亮</span></a>
+  <a class="dock-item" href="#/pet" data-route="pet"><span class="d-ic" aria-hidden="true">🐾</span><span class="d-tx">宠物</span></a>
 </nav>
 
 <!-- 记录弹层（补记/改错才用；日常记录走大按钮，一键完成） -->
@@ -1693,11 +1796,12 @@
   var pageDaily = $('#page-daily');
   var pageTickets = $('#page-tickets');
   var pageMoon = $('#page-moon');
+  var pagePet = $('#page-pet');
   var dock = $('#dock');
 
   function routeName() {
     var h = location.hash.replace(/^#\/?/, '');
-    return (h === 'letter' || h === 'daily' || h === 'tickets' || h === 'moon') ? h : 'home';
+    return (h === 'letter' || h === 'daily' || h === 'tickets' || h === 'moon' || h === 'pet') ? h : 'home';
   }
   function renderRoute() {
     if (!opened) return;
@@ -1707,6 +1811,7 @@
     pageDaily.classList.toggle('active', v === 'daily');
     pageTickets.classList.toggle('active', v === 'tickets');
     pageMoon.classList.toggle('active', v === 'moon');
+    pagePet.classList.toggle('active', v === 'pet');
     if (v === 'letter') enterLetter();
     var items = dock.querySelectorAll('.dock-item');
     for (var i = 0; i < items.length; i++) {
@@ -2233,6 +2338,7 @@
     if (act && dayDiff(act.start, t) + 1 <= PERIOD_LEN_LONG) {
       act.end = t;
       savePeriods();
+      petS.snacks += 2; petS.growth += 2; savePetState(); /* 记一笔老巫婆，小家伙有粮 */
       renderMoon();
       celebrate(moonMain);
       var len = dayDiff(act.start, t) + 1;
@@ -2252,6 +2358,7 @@
       periods.unshift({ start: t, end: null });
       periods.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
       savePeriods();
+      petS.snacks += 2; petS.growth += 2; savePetState(); /* 记一笔老巫婆，小家伙有粮 */
       renderMoon();
       celebrate(moonMain);
       showUndo('记好啦：老巫婆今天来了' + note, undoable(snap));
@@ -2403,13 +2510,150 @@
     });
   });
 
+  /* ── 宠物屋 · 家里的小家伙们 ──
+     设计红线（社区调研结论）：宠物永不死、没有饥饿惩罚、没有打卡压力；
+     想加新成员，往 PETS 里照抄一条就行。零食和成长是全屋共享的，
+     切换只是「今天谁上岗」，不会拆散感情值。 */
+  var PETS = [
+    { id: 'niannian', ic: '🐱', name: '念念', breed: '家里的猫 · Bongo Cat 转世',
+      lines: ['喵？', '本喵今日营业，摸吧', '踩奶进行时，勿扰', '（缓慢眨眼）', '念念觉得，你又变好看了'] },
+    { id: 'gaga', ic: '🦢', name: '嘎嘎', breed: '小月亮鹅 · Desktop Goose 转世',
+      lines: ['嘎！', '你的注意力，被我叼走了', '（放下嘴里不知哪来的钥匙）', '嘎嘎巡视领地中', '月亮就是嘎嘎叼来挂上的'] },
+    { id: 'tiaotiao', ic: '🦖', name: '跳跳', breed: '小恐龙 · Chrome 断网恐龙转世',
+      lines: ['哔——', 'Wi-Fi 断没断，跳跳都得跳', '又跳过一个仙人掌！', '（恐龙式呆萌站立）', '离线之王，就是跳跳'] },
+    { id: 'dundun', ic: '🐶', name: '墩墩', breed: '小狗 · 热情本人',
+      lines: ['汪！！', '是你是你是你！', '尾巴已摇成螺旋桨', '墩墩！冲！', '（叼来拖鞋邀功中）'] }
+  ];
+  var PET_KEY = 'yulin_pet_v1';
+  var STAGE_NAMES = ['幼崽期', '少年期', '成年'];
+  function dayStamp() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function loadPetState() {
+    var base = { active: 'niannian', snacks: 5, growth: 0, last: Date.now(), day: '', petted: 0 };
+    try {
+      var raw = JSON.parse(localStorage.getItem(PET_KEY) || '{}');
+      for (var k in base) if (raw[k] !== undefined) base[k] = raw[k];
+    } catch (err) {}
+    return base;
+  }
+  var petS = loadPetState();
+  function savePetState() { try { localStorage.setItem(PET_KEY, JSON.stringify(petS)); } catch (err) {} }
+
+  /* 离线结算：每离开一天攒 1 颗零食（封顶 5），当日首次开门再发开门粮 2 颗 */
+  (function petOffline() {
+    var now = Date.now(), msg = '';
+    var days = petS.last ? Math.floor((now - petS.last) / 864e5) : 0;
+    var gained = Math.min(5, days);
+    if (gained > 0) { petS.snacks += gained; msg = '你不在的 ' + days + ' 天里，小家伙攒了 ' + gained + ' 颗零食'; }
+    if (petS.day !== dayStamp()) { petS.day = dayStamp(); petS.petted = 0; petS.snacks += 2; msg += (msg ? '；' : '') + '今日开门粮 +2'; }
+    petS.last = now;
+    savePetState();
+    if (msg) setTimeout(function () { showUndo(msg, null); }, 1800);
+  })();
+
+  var petBody = $('#petBody'), petName = $('#petName'), petBreed = $('#petBreed'),
+      petState = $('#petState'), petFeedBtn = $('#petFeedBtn'), petBubble = $('#petBubble'),
+      petRoster = $('#petRoster'), petMeta = $('#petMeta'), petStageEl = $('#petStage'),
+      petZzz = $('#petZzz');
+  var bubbleTimer = null;
+  function curPet() {
+    for (var i = 0; i < PETS.length; i++) if (PETS[i].id === petS.active) return PETS[i];
+    return PETS[0];
+  }
+  function petStageIdx() { return petS.growth >= 90 ? 2 : petS.growth >= 30 ? 1 : 0; }
+
+  function renderPet() {
+    var p = curPet(), st = petStageIdx();
+    petBody.textContent = p.ic;
+    petName.textContent = p.name;
+    petBreed.textContent = p.breed + ' · ' + STAGE_NAMES[st];
+    var act = activePeriod();
+    if (act) {
+      petState.textContent = '老巫婆来了，' + p.name + ' 叼来了小毯子和热水袋，让你们好好休息';
+    } else if (st < 2) {
+      var need = (st === 0 ? 30 : 90) - petS.growth;
+      petState.textContent = '成长 ' + petS.growth + ' · 距离' + STAGE_NAMES[st + 1] + '还差 ' + need + ' 点（喂零食 +10，戳戳 +1）';
+    } else {
+      petState.textContent = '已经长大成人啦 · 成长 ' + petS.growth + '，继续投喂也不嫌多';
+    }
+    var h = new Date().getHours();
+    petZzz.hidden = !(h >= 23 || h < 5);
+    petFeedBtn.textContent = petS.snacks > 0
+      ? '投喂一颗零食（还剩 ' + petS.snacks + ' 颗）'
+      : '零食见底啦，明天开门再来领';
+    petFeedBtn.classList.toggle('go', petS.snacks <= 0);
+    petMeta.textContent = '四只轮班上岗 · 换着玩，新鲜感常在';
+    renderRoster();
+    renderHomeLive();
+  }
+  function renderRoster() {
+    petRoster.innerHTML = '';
+    PETS.forEach(function (p) {
+      var c = document.createElement('div');
+      c.className = 'pet-chip' + (p.id === petS.active ? ' on' : '');
+      c.innerHTML = '<div class="pc-ic">' + p.ic + '</div><div class="pc-name">' + p.name + '</div>'
+                  + '<div class="pc-line">' + p.breed.split(' · ')[0] + '</div>';
+      c.addEventListener('click', function () {
+        if (petS.active === p.id) return;
+        petS.active = p.id;
+        savePetState();
+        renderPet();
+        celebrate(c);
+        petTalk();
+      });
+      petRoster.appendChild(c);
+    });
+  }
+  function petTalk() {
+    var p = curPet();
+    petBubble.textContent = p.lines[Math.floor(Math.random() * p.lines.length)];
+    petBubble.hidden = false;
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () { petBubble.hidden = true; }, 2600);
+  }
+  petStageEl.addEventListener('click', function () {
+    petBody.classList.remove('hop');
+    void petBody.offsetWidth;
+    petBody.classList.add('hop');
+    petTalk();
+    try { popSound(); } catch (err) {}
+    var r = petStageEl.getBoundingClientRect();
+    for (var i = 0; i < 6; i++) {
+      (function (k) {
+        setTimeout(function () { spawnHeart(r.left + r.width / 2 + (Math.random() * 70 - 35), r.top + 70, true); }, k * 70);
+      })(i);
+    }
+    if (petS.petted < 5) { petS.petted++; petS.growth++; savePetState(); renderPet(); }
+  });
+  petStageEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petStageEl.click(); }
+  });
+  petFeedBtn.addEventListener('click', function () {
+    if (petS.snacks <= 0) { petTalk(); return; }
+    petS.snacks--;
+    petS.growth += 10;
+    savePetState();
+    renderPet();
+    celebrate(petFeedBtn);
+    petTalk();
+    showUndo(curPet().name + ' 吃得津津有味 · 成长 +10', null);
+  });
+
   function renderHomeLive() {
     var el = $('#liveMoon');
-    if (!el) return;
-    var act = activePeriod(), st = periodStats();
-    if (act) el.textContent = '🧙 老巫婆来了 · 第 ' + (dayDiff(act.start, todayStr()) + 1) + ' 天';
-    else if (st.next) el.textContent = '🧙 老巫婆约 ' + prettyShort(st.next) + ' 再来';
-    else el.textContent = '🧙 还没有标记';
+    if (el) {
+      var act = activePeriod(), st = periodStats();
+      if (act) el.textContent = '🧙 老巫婆来了 · 第 ' + (dayDiff(act.start, todayStr()) + 1) + ' 天';
+      else if (st.next) el.textContent = '🧙 老巫婆约 ' + prettyShort(st.next) + ' 再来';
+      else el.textContent = '🧙 还没有标记';
+    }
+    var lp = $('#livePet');
+    if (lp) {
+      var cp = curPet();
+      lp.textContent = cp.ic + ' ' + cp.name + ' 在岗 · ' + STAGE_NAMES[petStageIdx()];
+    }
   }
 
   renderJournal();
@@ -2418,6 +2662,7 @@
   renderChips();
   renderHomeBits();
   renderMoon();
+  renderPet();
   renderFortune(Math.floor(Date.now() / 864e5)); /* 按日期定「今日签」，两台手机看到同一句 */
 })();
 </script>
