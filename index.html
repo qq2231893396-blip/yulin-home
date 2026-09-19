@@ -68,7 +68,7 @@
   body:not(.opened) { overflow: hidden; }
   body::after { /* 四角暗角，让夜空更有层次 */
     content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(12,12,32,.45) 100%);
+    background: radial-gradient(ellipse at center, transparent 62%, rgba(38,44,70,.32) 100%);
   }
 
   /* ── 星空背景 ─────────────────────────── */
@@ -77,7 +77,7 @@
     position: absolute; border-radius: 50%; background: #fff;
     opacity: .18; animation: twinkle var(--d, 2.6s) ease-in-out infinite alternate;
   }
-  @keyframes twinkle { from { opacity: calc(.12 * var(--star-o)); } to { opacity: calc(.85 * var(--star-o)); } }
+  @keyframes twinkle { from { opacity: calc(.10 * var(--star-o) * var(--sd, 1)); } to { opacity: calc(.92 * var(--star-o) * var(--sd, 1)); } }
   body[data-phase="day"] .star { animation-play-state: paused; }
   .moon {
     position: absolute; top: 7%; right: 10%;
@@ -133,16 +133,35 @@
   #seasonFx i { position: absolute; top: -6vh; will-change: transform; display: block; }
   .petal {
     width: var(--sz, 12px); height: calc(var(--sz, 12px) * 1.18);
-    background: radial-gradient(ellipse at 32% 26%, #ffe4ee, #f6adc5 62%, #e98fb2);
-    border-radius: 80% 20% 72% 28% / 74% 28% 80% 20%;
-    opacity: .85;
+    opacity: .9;
     animation: fxFall var(--fd, 10s) linear var(--fdel, 0s) infinite;
+  }
+  .petal b { /* 尖角真花瓣形，内层管翻面——外层落下、内层翻转，两层不同步才有「飘」感 */
+    display: block; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #ffe3e9, #ffb7c5 58%, #f29cb8);
+    border-radius: 0 100% 0 100%;
+    animation: petalFlip var(--fp, 3.4s) ease-in-out var(--fdel, 0s) infinite alternate;
+  }
+  .petal.far { filter: blur(1.5px); opacity: .55; }
+  @keyframes petalFlip {
+    from { transform: rotateX(0deg) rotateZ(-16deg) scale(1); }
+    to   { transform: rotateX(150deg) rotateZ(14deg) scale(.84); }
   }
   .leaf {
     width: var(--sz, 14px); height: calc(var(--sz, 14px) * 1.06);
-    background: linear-gradient(135deg, var(--lc1, #e2a35c), var(--lc2, #c47a3e));
-    border-radius: 6% 62% 6% 62%; opacity: .88;
+    opacity: .88;
     animation: fxFall var(--fd, 10s) linear var(--fdel, 0s) infinite;
+  }
+  .leaf b { /* 叶片形+rotate3d 翻面，翻面与明暗联动（受光面/背光面） */
+    display: block; width: 100%; height: 100%;
+    background: linear-gradient(135deg, var(--lc1, #e2a35c), var(--lc2, #c47a3e));
+    border-radius: 0 100% 20% 100%;
+    animation: leafFlip var(--fp, 2.6s) ease-in-out var(--fdel, 0s) infinite alternate;
+  }
+  .leaf.far { filter: blur(1.5px); opacity: .55; }
+  @keyframes leafFlip {
+    from { transform: rotate3d(1, 1, 0, 0deg); filter: brightness(1); }
+    to   { transform: rotate3d(1, 1, 0, 155deg); filter: brightness(.72); }
   }
   .snow {
     top: -4vh; width: var(--sz, 5px); height: var(--sz, 5px); border-radius: 50%;
@@ -150,14 +169,19 @@
     opacity: .9;
     animation: fxSnow var(--fd, 12s) linear var(--fdel, 0s) infinite;
   }
+  .snow.far { filter: blur(2px); opacity: .48; }
+  .snow.mid { filter: blur(.6px); opacity: .72; }
   .firefly {
-    top: auto; width: 5px; height: 5px; border-radius: 50%;
-    background: radial-gradient(circle, #f2ffd9, #c4ec8e 55%, rgba(196,236,142,0) 78%);
-    box-shadow: 0 0 10px 3px rgba(196,240,140,.4);
+    top: auto; width: 4px; height: 4px; border-radius: 50%;
+    background: #f4ffdc;
     opacity: 0;
     animation:
       ffGlow var(--fd, 5s) ease-in-out var(--fdel, 0s) infinite,
       ffDrift var(--fd2, 14s) ease-in-out var(--fdel, 0s) infinite alternate;
+  }
+  .firefly::before { /* 光晕预渲染在伪元素，动画只动父级 opacity——绝不动画 box-shadow */
+    content: ""; position: absolute; inset: -7px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(228,255,152,.9), rgba(196,240,140,.35) 45%, transparent 70%);
   }
   @keyframes fxFall {
     0%   { transform: translate3d(0, -6vh, 0) rotate(0deg); }
@@ -193,45 +217,48 @@
   body[data-phase="dawn"] #lg-dawn, body[data-phase="day"] #lg-day,
   body[data-phase="dusk"] #lg-dusk, body[data-phase="night"] #lg-night,
   body[data-phase="dawn"] #lg-haze { opacity: 1; }
-  /* 清晨：天顶金粉光 + 地面薄雾 */
-  #lg-dawn { background:
-    radial-gradient(120% 52% at 50% -10%, rgba(255,216,164,.38), transparent 62%),
-    linear-gradient(180deg, rgba(32,36,66,.28), transparent 32%); }
+  /* 清晨：天顶金粉光（screen 混合让暖光透进天色） */
+  #lg-dawn { mix-blend-mode: screen; background:
+    radial-gradient(120% 52% at 50% -10%, rgba(255,216,164,.40), transparent 62%); }
   #lg-haze { background: linear-gradient(0deg, rgba(255,246,238,.30), rgba(255,246,238,.12) 46%, transparent 88%); }
-  /* 白昼：暖光斑跟着太阳走 + 天顶轻压一层，保封面白字可读 */
-  #lg-day { background:
-    radial-gradient(58% 40% at var(--sun-x, 72%) var(--sun-y, 22%), rgba(255,248,216,.36), transparent 72%),
-    linear-gradient(180deg, rgba(26,36,66,.13), transparent 30%); }
+  /* 白昼：暖光斑跟着太阳走 */
+  #lg-day { mix-blend-mode: screen; background:
+    radial-gradient(58% 40% at var(--sun-x, 72%) var(--sun-y, 22%), rgba(255,248,216,.38), transparent 72%); }
   /* 黄昏：火烧云从地平线烧上来，太阳方向拖出大光晕 */
-  #lg-dusk { background:
-    radial-gradient(64% 46% at var(--sun-x, 26%) var(--sun-y, 70%), rgba(255,150,78,.44), transparent 74%),
-    linear-gradient(0deg, rgba(255,118,58,.28), rgba(214,86,90,.12) 40%, transparent 62%),
-    linear-gradient(180deg, rgba(46,30,72,.26), transparent 40%); }
+  #lg-dusk { mix-blend-mode: screen; background:
+    radial-gradient(64% 46% at var(--sun-x, 26%) var(--sun-y, 70%), rgba(255,158,86,.46), transparent 74%),
+    linear-gradient(0deg, rgba(255,130,66,.30), rgba(226,96,80,.14) 40%, transparent 62%); }
   /* 夜晚：银河斜挂 + 月亮光域 + 整体再沉一点 */
   #lg-night { background:
     linear-gradient(62deg, transparent 36%, rgba(172,192,255,.09) 46%, rgba(224,232,255,.16) 50%, rgba(172,192,255,.09) 55%, transparent 65%),
     radial-gradient(44% 32% at var(--moon-x, 84%) var(--moon-y, 16%), rgba(214,228,255,.22), transparent 76%),
     linear-gradient(180deg, rgba(8,12,38,.30), transparent 44%); }
 
-  /* ── 云层：白天有云作天色的参照，夜里淡成剪影 ── */
+  /* ── 云层：多圆簇+整体软化+高光+同色相底影（社区案例手法，弃硬边椭圆）── */
   #clouds { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none;
     opacity: .9; transition: opacity 2.4s ease; }
   body[data-phase="dusk"] #clouds { opacity: .5; }
   body[data-phase="night"] #clouds { opacity: .14; }
   .cloud { position: absolute; will-change: transform; animation: cloudDrift var(--cd, 200s) linear infinite; }
-  .cloud b { position: absolute; border-radius: 50%;
-    background: radial-gradient(ellipse at 40% 34%, var(--cl-hi, #ffffff) 38%, var(--cl-lo, #e2ebf3) 78%);
-    box-shadow: 0 10px 26px rgba(96,118,152,.16); }
+  .cloud i, .cloud b, .cloud u { position: absolute; border-radius: 50%; display: block; }
+  .cloud b { background: var(--cl-lo, #dfe9f2); filter: blur(5px); } /* 主体 */
+  .cloud i { background: var(--cl-hi, #ffffff); filter: blur(4px); opacity: .92; transform: translateY(-13%); } /* 顶部受光 */
+  .cloud u { background: var(--cl-sh, #a8b6c6); filter: blur(6px); opacity: .3; transform: translateY(15%) scale(1.04, .62); } /* 同色相底影 */
   @keyframes cloudDrift { from { transform: translateX(-36vw); } to { transform: translateX(136vw); } }
 
-  /* ── 远山与那棵树：给天空一个参照物，天色变化一眼可见 ── */
+  /* ── 远山四层大气透视 + 层间雾带：给天空一个参照物，天色变化一眼可见 ── */
   #terrain { position: fixed; left: 0; right: 0; bottom: 0; height: 23vh; z-index: 1; pointer-events: none; }
   #terrain .hills { position: absolute; inset: 0; width: 100%; height: 100%; }
-  #terrain .hills path { transition: fill 2.4s ease; }
-  .tree { position: absolute; right: 5.5%; bottom: 13%; width: clamp(104px, 13vw, 158px); height: auto; }
+  #terrain stop { transition: stop-color 2.4s ease; }
+  .mist { position: absolute; left: 0; right: 0; height: 7%; pointer-events: none;
+    background: linear-gradient(180deg, transparent, var(--mist, #c8d4e2) 45%, transparent); }
+  #mist0 { bottom: 52%; opacity: .36; }
+  #mist1 { bottom: 28%; opacity: .22; }
+  .tree { position: absolute; right: 5.5%; bottom: 13%; width: clamp(108px, 13.5vw, 162px); height: auto; }
   .tree .trunk { stroke: var(--trunk, #7a5f4c); transition: stroke 2.4s ease; }
   .tree .crown { opacity: 0; transition: opacity 1.8s ease; }
   .tree .crown.on { opacity: 1; }
+  .tree .crown circle.haze { opacity: .12; }
 
   .star.big { box-shadow: 0 0 6px 1px rgba(255,255,255,.85), 0 0 16px 4px rgba(188,208,255,.35); }
   .moon::after { /* 月晕大环，夜晚月亮更「亮」 */
@@ -242,6 +269,12 @@
   @keyframes moonHalo { from { transform: scale(.96); opacity: .8; } to { transform: scale(1.06); opacity: 1; } }
   .sun { transition: opacity 1.4s ease, left 2.5s ease, top 2.5s ease, transform 1.6s ease; }
   body[data-phase="dawn"] .sun, body[data-phase="dusk"] .sun { transform: scale(1.3); }
+
+  /* 全局细噪点：日系胶片质感（feTurbulence，opacity 极轻只盖天空区） */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
 
   /* 天色面板（点月亮/太阳呼出） */
   #ambPanel {
@@ -1134,32 +1167,32 @@
 <div id="clouds" aria-hidden="true"></div>
 <div id="terrain" aria-hidden="true">
   <svg class="hills" viewBox="0 0 1440 240" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="var(--hill-far, #2a3058)" d="M0 118 C 170 66, 350 94, 540 82 C 760 68, 900 108, 1080 90 C 1240 76, 1350 94, 1440 82 L1440 240 L0 240 Z"/>
-    <path fill="var(--hill-near, #20264a)" d="M0 172 C 150 132, 330 158, 550 142 C 770 126, 970 162, 1170 142 C 1290 130, 1370 146, 1440 138 L1440 240 L0 240 Z"/>
+    <defs>
+      <linearGradient id="hillg0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hs0a"/><stop offset="1" class="hs0b"/></linearGradient>
+      <linearGradient id="hillg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hs1a"/><stop offset="1" class="hs1b"/></linearGradient>
+      <linearGradient id="hillg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hs2a"/><stop offset="1" class="hs2b"/></linearGradient>
+      <linearGradient id="hillg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="hs3a"/><stop offset="1" class="hs3b"/></linearGradient>
+    </defs>
+    <!-- 四层远山：远层缓而亮（融进天色=大气透视），近层陡而沉 -->
+    <path fill="url(#hillg0)" d="M0 100 C 130 80, 270 92, 420 78 C 580 64, 720 88, 880 74 C 1040 62, 1200 88, 1340 76 C 1400 70, 1425 78, 1440 74 L1440 240 L0 240 Z"/>
+    <path fill="url(#hillg1)" d="M0 138 C 150 112, 320 130, 490 110 C 660 92, 820 124, 980 106 C 1140 90, 1300 120, 1440 100 L1440 240 L0 240 Z"/>
+    <path fill="url(#hillg2)" d="M0 176 C 170 148, 360 168, 550 146 C 740 126, 920 160, 1110 140 C 1270 124, 1380 150, 1440 138 L1440 240 L0 240 Z"/>
+    <path fill="url(#hillg3)" d="M0 206 C 190 178, 400 200, 610 176 C 810 154, 1010 190, 1210 166 C 1330 152, 1400 170, 1440 160 L1440 240 L0 240 Z"/>
   </svg>
-  <svg class="tree" viewBox="0 0 140 170" aria-hidden="true">
-    <path class="trunk" fill="none" stroke-width="5" stroke-linecap="round"
-      d="M70 168 C 72 132, 64 106, 54 80 M64 122 C 54 110, 42 103, 33 98 M67 104 C 79 94, 92 89, 104 84 M58 88 C 56 76, 60 66, 64 58"/>
-    <g class="crown" data-season="spring">
-      <ellipse cx="70" cy="52" rx="40" ry="33" fill="#f2bccf"/>
-      <ellipse cx="38" cy="66" rx="23" ry="19" fill="#eba4bf"/>
-      <ellipse cx="102" cy="62" rx="26" ry="21" fill="#f5c9d8"/>
-    </g>
-    <g class="crown" data-season="summer">
-      <ellipse cx="70" cy="52" rx="40" ry="33" fill="#5f9e7e"/>
-      <ellipse cx="38" cy="66" rx="23" ry="19" fill="#4e8a6e"/>
-      <ellipse cx="102" cy="62" rx="26" ry="21" fill="#6eae8c"/>
-    </g>
-    <g class="crown" data-season="autumn">
-      <ellipse cx="70" cy="52" rx="40" ry="33" fill="#d98e52"/>
-      <ellipse cx="38" cy="66" rx="23" ry="19" fill="#c46f3e"/>
-      <ellipse cx="102" cy="62" rx="26" ry="21" fill="#e2a45e"/>
-    </g>
-    <g class="crown" data-season="winter">
-      <ellipse cx="54" cy="79" rx="10" ry="7" fill="#eef4f8"/>
-      <ellipse cx="33" cy="97" rx="8" ry="6" fill="#f4f8fb"/>
-      <ellipse cx="104" cy="83" rx="9" ry="6" fill="#eef4f8"/>
-    </g>
+  <div class="mist" id="mist0"></div>
+  <div class="mist" id="mist1"></div>
+  <svg class="tree" viewBox="0 0 150 175" aria-hidden="true">
+    <!-- 枝干两级递减：主干→主枝→小枝，分叉角各不相同 -->
+    <path class="trunk" fill="none" stroke-width="7" stroke-linecap="round"
+      d="M76 173 C 79 140, 72 112, 60 84 C 54 70, 52 58, 55 44"/>
+    <path class="trunk branch" fill="none" stroke-width="4.5" stroke-linecap="round"
+      d="M68 112 C 56 100, 42 92, 30 88 M60 84 C 62 70, 70 60, 82 52 M55 58 C 46 50, 40 42, 38 32"/>
+    <path class="trunk twig" fill="none" stroke-width="2.4" stroke-linecap="round"
+      d="M30 88 C 24 82, 20 74, 21 66 M82 52 C 90 46, 98 44, 108 46 M38 32 C 34 26, 34 20, 37 14 M55 44 C 60 38, 66 34, 74 32"/>
+    <g class="crown" data-season="spring"></g>
+    <g class="crown" data-season="summer"></g>
+    <g class="crown" data-season="autumn"></g>
+    <g class="crown" data-season="winter"></g>
   </svg>
 </div>
 <div id="seasonFx" aria-hidden="true"></div>
@@ -1603,7 +1636,16 @@
       var s = document.createElement('span');
       s.className = 'star';
       var size = (Math.random() * 1.7 + .8).toFixed(1);
-      if (i % 11 === 0) { s.className += ' big'; size = (Math.random() * 1 + 2.1).toFixed(1); } /* 几颗带光芒的亮星 */
+      /* 三层景深：远层小而暗（--sd 压亮度）、中层标准、近层大亮带光芒 */
+      if (i % 5 < 2) {          /* 远层 */
+        size = (Math.random() * .5 + .6).toFixed(1);
+        s.style.setProperty('--sd', .55);
+      } else if (i % 5 < 4) {   /* 中层 */
+        size = (Math.random() * .7 + 1.2).toFixed(1);
+      } else {                  /* 近层 */
+        size = (Math.random() * .9 + 1.9).toFixed(1);
+        if (i % 10 === 4) { s.className += ' big'; size = (Math.random() * 1 + 2.3).toFixed(1); }
+      }
       s.style.width = size + 'px';
       s.style.height = size + 'px';
       s.style.left = (Math.random() * 100).toFixed(2) + '%';
@@ -1640,49 +1682,47 @@
   var SEASON_NAME = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
 
   /* 4 季 × 4 时段的天空色板 [顶, 上中, 下中, 底]；
-     春=樱粉青、夏=浓钴蓝火烧云、秋=暖金霾蓝、冬=冷冽灰蓝，夜都压暗保星星 */
+     V3 按社区调研重调（黄金时刻/蓝调时刻色彩科学 + uiGradients/CodePen 案例归纳）：
+     同季共用一条色相主轴（春樱粉蓝/夏高饱和青/秋琥珀紫/冬低饱和灰青），
+     饱和度峰值只在地平线、向天顶灰化；夜天天顶明度≤18% 保白字 */
   var SKY = {
     spring: {
-      dawn:  ['#5a5480', '#8f6f96', '#d49aa2', '#f2c2b8'],
-      day:   ['#63a0c8', '#90bed6', '#bcd9dc', '#eadfd9'],
-      dusk:  ['#584a80', '#8a5f88', '#cf7f92', '#f0a98e'],
-      night: ['#1f2040', '#35345f', '#5c4d78', '#97718a']
+      dawn:  ['#8faee3', '#c3cdef', '#e3cddd', '#f7cdd2'],
+      day:   ['#5aa7ec', '#8fc3f2', '#bbdcf5', '#d6ecf7'],
+      dusk:  ['#8b7fc7', '#e8a3b4', '#f6bba9', '#ffc9a3'],
+      night: ['#141c3c', '#222c55', '#313c6a', '#3a4677']
     },
     summer: {
-      dawn:  ['#3e5d8c', '#5f8cb2', '#9fb9b8', '#f0c191'],
-      day:   ['#1f6fc0', '#2f8ad2', '#4aa2dc', '#74c0e4'],
-      dusk:  ['#3c3170', '#7c3f6e', '#d05a4e', '#ff9a4d'],
-      night: ['#101c3e', '#1e2f5c', '#3a4a7e', '#7a7ba6']
+      dawn:  ['#4e97d8', '#9cc8e8', '#c1e1e8', '#d8f0e8'],
+      day:   ['#1e7bd7', '#56aee8', '#a1d7f0', '#cff0f5'],
+      dusk:  ['#2c4c9b', '#e06685', '#f3936c', '#ffae5c'],
+      night: ['#0b1428', '#12203e', '#192c4c', '#1e3454']
     },
     autumn: {
-      dawn:  ['#57476e', '#8a6572', '#c98f68', '#e8b878'],
-      day:   ['#5f88a2', '#8aa6ae', '#c2b694', '#e8cc96'],
-      dusk:  ['#4a3862', '#7e4e6a', '#c46a4e', '#eda05c'],
-      night: ['#26203f', '#3d3358', '#68506e', '#a67d78']
+      dawn:  ['#a8aecb', '#d9c2b4', '#e9d0b6', '#f2d9b8'],
+      day:   ['#6e9ec9', '#a9c4d9', '#d4d7ce', '#efe3c8'],
+      dusk:  ['#6e5a8e', '#c97b6b', '#e29c63', '#f2b05e'],
+      night: ['#171426', '#26203e', '#342c4a', '#3d3352']
     },
     winter: {
-      dawn:  ['#4a5068', '#77819c', '#a9a3ac', '#d4b4a4'],
-      day:   ['#587a9c', '#7e9fb8', '#a9c2d0', '#d4e0e8'],
-      dusk:  ['#3a3a5e', '#5f5378', '#967488', '#c49a92'],
-      night: ['#161a30', '#262c4c', '#424764', '#7c7f96']
+      dawn:  ['#93a7c4', '#c4cfe0', '#dad5d9', '#e8d8d4'],
+      day:   ['#6d93b8', '#a9c2d8', '#cedce8', '#e4ecf2'],
+      dusk:  ['#5d6b99', '#b08ca0', '#d3a598', '#e8b493'],
+      night: ['#10182b', '#1a2540', '#253351', '#2c3b5c']
     }
   };
 
-  /* 远山两层颜色 [后山, 近山]：白天带季节色，晨昏像剪影透着天光，夜里沉成墨蓝 */
-  var TERRAIN = {
-    spring: { dawn: ['#6a6f9c', '#4f5586'], day: ['#8fb7a6', '#6f9e92'], dusk: ['#75648f', '#584e7c'], night: ['#2a2f52', '#1e2342'] },
-    summer: { dawn: ['#5d7d9a', '#49628a'], day: ['#5f9e7c', '#4b8a6a'], dusk: ['#6d5679', '#544470'], night: ['#232a4e', '#181f3e'] },
-    autumn: { dawn: ['#7d6a88', '#5f5278'], day: ['#a8956e', '#8a7a58'], dusk: ['#7d5a72', '#614a64'], night: ['#2c2848', '#201d3c'] },
-    winter: { dawn: ['#7d849c', '#626a86'], day: ['#c2d3de', '#a5bac9'], dusk: ['#665e7e', '#4f4a6a'], night: ['#242a48', '#191e38'] }
-  };
+  /* 山色程序化：从当季天色地平线色推导（大气透视=远层融进天色，近层沉下来带季节色相），
+     山永远和天是「一伙的」；TINT 给近层一点点季节倾向 */
+  var TINT = { spring: [111, 158, 146], summer: [75, 138, 106], autumn: [138, 122, 88], winter: [157, 180, 196] };
   var TRUNK = { spring: '#8a6a58', summer: '#7a5f4c', autumn: '#7d5640', winter: '#6b7280' };
 
-  /* 云的配色 [亮部, 暗部]：春粉白、夏浓白、秋米金、冬灰蓝（夜里整体淡出由 CSS 控制） */
+  /* 云的配色 [受光亮部, 主体底色, 底影（同色相降饱和）]（夜里整体淡出由 CSS 控制） */
   var CLOUD_COL = {
-    spring: ['#ffffff', '#f2dce5'],
-    summer: ['#ffffff', '#d9e9f4'],
-    autumn: ['#fdf3e0', '#e6d2b6'],
-    winter: ['#edf2f7', '#c8d5e0']
+    spring: ['#ffffff', '#ecd4de', '#c9a4b4'],
+    summer: ['#ffffff', '#cfe2f0', '#93aec6'],
+    autumn: ['#fff8ea', '#ddc5a4', '#b3906a'],
+    winter: ['#f4f8fb', '#bccbdb', '#8ea3b8']
   };
 
   /* 面板里的一句话：现在的天色，正适合做什么 */
@@ -1819,7 +1859,7 @@
     }
   }
 
-  /* 云：按季节上色，5 朵错峰慢慢横过天空 */
+  /* 云：三层同构圆簇（底影/主体/顶部受光）+ 各自 blur 软化——社区「多圆叠加+统一 blur」手法 */
   function rebuildClouds(season) {
     var layer = document.getElementById('clouds');
     if (!layer) return;
@@ -1827,52 +1867,128 @@
     layer.innerHTML = '';
     layer.style.setProperty('--cl-hi', col[0]);
     layer.style.setProperty('--cl-lo', col[1]);
-    /* 五个椭圆拼一朵蓬松云（按 130×44 画布设计） */
-    var dots = [[8, 0, 44, 26], [26, 12, 58, 36], [52, 4, 50, 30], [74, 0, 42, 24], [92, 4, 34, 18]];
+    layer.style.setProperty('--cl-sh', col[2]);
     for (var i = 0; i < 5; i++) {
       var c = document.createElement('div');
       c.className = 'cloud';
-      var sc = rnd(.7, 1.5);
+      var sc = rnd(.75, 1.55);
       c.style.top = rnd(4, 30).toFixed(1) + '%';
-      c.style.width = (130 * sc).toFixed(0) + 'px';
-      c.style.height = (44 * sc).toFixed(0) + 'px';
+      c.style.width = (120 * sc).toFixed(0) + 'px';
+      c.style.height = (42 * sc).toFixed(0) + 'px';
       c.style.setProperty('--cd', rnd(150, 280).toFixed(0) + 's');
       c.style.animationDelay = (-rnd(0, 280)).toFixed(0) + 's';
-      for (var j = 0; j < dots.length; j++) {
-        var d = dots[j], b = document.createElement('b');
-        b.style.left = (d[0] / 130 * 100).toFixed(1) + '%';
-        b.style.bottom = (d[1] / 44 * 100).toFixed(1) + '%';
-        b.style.width = (d[2] / 130 * 100).toFixed(1) + '%';
-        b.style.height = (d[3] / 44 * 100).toFixed(1) + '%';
-        c.appendChild(b);
+      /* 受控随机圆簇：中央大四周小，一次生成三层复用 */
+      var dots = [];
+      for (var k = 0; k < 7; k++) {
+        var ang = rnd(0, Math.PI * 2), rad = (k === 0 ? 0 : rnd(.28, .72));
+        dots.push([
+          50 + Math.cos(ang) * rad * 46,            /* left% */
+          58 + Math.sin(ang) * rad * 34 - (k === 0 ? 6 : 0), /* bottom%（中央团略抬） */
+          (k === 0 ? rnd(.62, .78) : rnd(.3, .52)) * 100 /* w% */
+        ]);
+      }
+      var layers = [['u', 1], ['b', 1], ['i', .8]]; /* 三层同构圆簇，层间偏移交给各自 CSS transform */
+      for (var li = 0; li < layers.length; li++) {
+        var tag = layers[li][0], scl = layers[li][1];
+        for (var j = 0; j < dots.length; j++) {
+          var d = dots[j], el = document.createElement(tag);
+          var w = d[2] * scl;
+          el.style.left = (d[0] - w / 2) + '%';
+          el.style.bottom = d[1] + '%';
+          el.style.width = w + '%';
+          el.style.height = (w * .8) + '%';
+          c.appendChild(el);
+        }
       }
       layer.appendChild(c);
     }
   }
 
-  /* 远山与那棵树换装 */
+  /* 远山四层 + 雾带换装（配色从当季天色程序化推导） */
   function applyTerrain(season, phase) {
-    var c = TERRAIN[season][phase];
+    var pal = SKY[season][phase].map(hex2rgb);
+    var horizon = pal[3], top = pal[0], t = TINT[season];
+    var mix = function (a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; };
+    var shade = function (a, k) { return [a[0] * k, a[1] * k, a[2] * k]; };
     var st = document.body.style;
-    st.setProperty('--hill-far', c[0]);
-    st.setProperty('--hill-near', c[1]);
+    /* 四层：L0 最远（融天色多、亮）→ L3 最近（沉下来、带季节色相） */
+    var c0 = mix(horizon, top, .55);
+    var c1 = mix(horizon, top, .32);
+    var c2 = shade(mix(horizon, t, .26), .76);
+    var c3 = shade(mix(horizon, t, .42), .7);
+    /* 渐变 stops：山脊略透雾，山脚沉（混雾权重克制，保住山的形态） */
+    var fog = mix(horizon, [255, 255, 255], .42);
+    var stops = { 0: [mix(c0, fog, .18), c0], 1: [mix(c1, fog, .12), c1], 2: [mix(c2, fog, .07), c2], 3: [c3, c3] };
+    for (var n = 0; n < 4; n++) {
+      document.querySelector('.hs' + n + 'a').setAttribute('stop-color', rgbStr(stops[n][0]));
+      document.querySelector('.hs' + n + 'b').setAttribute('stop-color', rgbStr(stops[n][1]));
+    }
+    st.setProperty('--mist', rgbStr(fog));
     st.setProperty('--trunk', TRUNK[season]);
     Array.prototype.forEach.call(document.querySelectorAll('#terrain .crown'), function (g) {
       g.classList.toggle('on', g.getAttribute('data-season') === season);
     });
   }
 
+  /* 那棵树的树冠：三簇受控随机圆，三色分层出体积（亮 70%/中 25%/深垫底）；冬季只留枝团晕+枝端雪 */
+  function buildCrowns() {
+    var CLUSTERS = [[75, 56, 26], [40, 84, 18], [106, 64, 20]]; /* [cx, cy, 半径]（viewBox 150×175） */
+    var SEASON3 = {
+      spring: ['#f6cdd9', '#efadc2', '#e295ad'],
+      summer: ['#7cb894', '#5f9e7e', '#4a8468'],
+      autumn: ['#e8a963', '#d3894b', '#b56f38']
+    };
+    Object.keys(SEASON3).forEach(function (se) {
+      var cols = SEASON3[se];
+      var g = document.querySelector('.crown[data-season="' + se + '"]');
+      /* 深色垫底一整片（体积），再中色、亮色往上叠 */
+      CLUSTERS.forEach(function (cl) {
+        g.appendChild(mkCircle(cl[0], cl[1] + 4, cl[2] * 1.04, cols[2]));
+      });
+      CLUSTERS.forEach(function (cl) {
+        for (var i = 0; i < 2; i++) {
+          g.appendChild(mkCircle(cl[0] + rnd(-cl[2], cl[2]) * .45, cl[1] + rnd(-6, 8), cl[2] * rnd(.5, .72), cols[1]));
+        }
+        for (var j = 0; j < 4; j++) {
+          g.appendChild(mkCircle(cl[0] + rnd(-cl[2], cl[2]) * .5, cl[1] + rnd(-cl[2], cl[2]) * .42, cl[2] * rnd(.34, .55), cols[0]));
+        }
+      });
+    });
+    var w = document.querySelector('.crown[data-season="winter"]');
+    CLUSTERS.forEach(function (cl) {
+      var hz = mkCircle(cl[0], cl[1], cl[2] * 1.02, '#dfe9f0');
+      hz.classList.add('haze');
+      w.appendChild(hz);
+    });
+    [[21, 66], [108, 46], [37, 14], [74, 32]].forEach(function (p, i) {
+      w.appendChild(mkCircle(p[0], p[1], i === 0 ? 6 : 4.5, '#eef4f8'));
+    });
+  }
+  function mkCircle(cx, cy, r, fill) {
+    var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', cx.toFixed(1));
+    c.setAttribute('cy', cy.toFixed(1));
+    c.setAttribute('r', r.toFixed(1));
+    c.setAttribute('fill', fill);
+    return c;
+  }
+
   function buildFx(season, phase) {
     fxLayer.innerHTML = '';
     rebuildClouds(season);
     if (season === 'spring') {
-      spawnFx('petal', 24, function (s) {
+      /* 双层景深：远层小而糊慢，近层大而清晰快；内层 <b> 管翻面 */
+      spawnFx('petal', 22, function (s) {
+        var far = Math.random() < .35;
         s.style.left = rnd(0, 100) + '%';
-        s.style.setProperty('--sz', rnd(10, 17).toFixed(1) + 'px');
-        s.style.setProperty('--fd', rnd(9, 15).toFixed(1) + 's');
-        s.style.setProperty('--fdel', (-rnd(0, 15)).toFixed(1) + 's');
+        s.style.setProperty('--sz', (far ? rnd(6, 8.5) : rnd(10, 15)).toFixed(1) + 'px');
+        s.style.setProperty('--fd', (far ? rnd(13, 18) : rnd(9, 13)).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 18)).toFixed(1) + 's');
         s.style.setProperty('--sw', rnd(20, 46).toFixed(0) + 'px');
         s.style.setProperty('--spin', rnd(300, 460).toFixed(0) + 'deg');
+        s.style.setProperty('--fp', rnd(2.4, 4.2).toFixed(1) + 's');
+        s.innerHTML = '<b></b>';
+        if (far) s.classList.add('far');
       });
     } else if (season === 'summer') {
       if (phase === 'dawn' || phase === 'day') {
@@ -1902,26 +2018,35 @@
       }
     } else if (season === 'autumn') {
       var lcs = [['#e2a35c', '#c47a3e'], ['#d98e4a', '#b5602f'], ['#c9a35c', '#a5793a'], ['#c46f3e', '#a04d28']];
-      spawnFx('leaf', 22, function (s) {
+      spawnFx('leaf', 20, function (s) {
         var lc = lcs[Math.floor(Math.random() * lcs.length)];
+        var far = Math.random() < .3;
         s.style.left = rnd(0, 100) + '%';
-        s.style.setProperty('--sz', rnd(11, 17).toFixed(1) + 'px');
+        s.style.setProperty('--sz', (far ? rnd(8, 10) : rnd(11, 16)).toFixed(1) + 'px');
         s.style.setProperty('--lc1', lc[0]);
         s.style.setProperty('--lc2', lc[1]);
-        s.style.setProperty('--fd', rnd(8, 14).toFixed(1) + 's');
-        s.style.setProperty('--fdel', (-rnd(0, 14)).toFixed(1) + 's');
+        s.style.setProperty('--fd', (far ? rnd(11, 15) : rnd(8, 12)).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 15)).toFixed(1) + 's');
         s.style.setProperty('--sw', rnd(30, 66).toFixed(0) + 'px');
         s.style.setProperty('--spin', rnd(460, 760).toFixed(0) + 'deg');
+        s.style.setProperty('--fp', rnd(2, 3.4).toFixed(1) + 's');
+        s.innerHTML = '<b></b>';
+        if (far) s.classList.add('far');
       });
     } else if (season === 'winter') {
-      /* 风雪：量更大，四分之一是近处的大雪片，落得急 */
-      spawnFx('snow', 46, function (s) {
-        var big = Math.random() < .25;
+      /* 风雪三层景深：远层小糊慢 / 中层 / 近层大而快、漂移大 */
+      spawnFx('snow', 44, function (s) {
+        var roll = Math.random();
+        var tier = roll < .32 ? 'far' : roll < .72 ? 'mid' : 'near';
         s.style.left = rnd(0, 100) + '%';
-        s.style.setProperty('--sz', (big ? rnd(7, 10.5) : rnd(3, 6.5)).toFixed(1) + 'px');
-        s.style.setProperty('--fd', (big ? rnd(6, 9.5) : rnd(9, 17)).toFixed(1) + 's');
-        s.style.setProperty('--fdel', (-rnd(0, 17)).toFixed(1) + 's');
-        s.style.setProperty('--drift', rnd(-60, 60).toFixed(0) + 'px');
+        s.style.setProperty('--sz',
+          (tier === 'far' ? rnd(2, 3) : tier === 'mid' ? rnd(3.2, 4.8) : rnd(5, 7)).toFixed(1) + 'px');
+        s.style.setProperty('--fd',
+          (tier === 'far' ? rnd(14, 20) : tier === 'mid' ? rnd(10, 14) : rnd(6, 9)).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 20)).toFixed(1) + 's');
+        s.style.setProperty('--drift',
+          (tier === 'near' ? rnd(-70, 70) : rnd(-40, 40)).toFixed(0) + 'px');
+        if (tier !== 'near') s.classList.add(tier);
       });
     }
   }
@@ -1990,6 +2115,7 @@
   }
 
   (function initAmbience() {
+    buildCrowns();
     var cs = getComputedStyle(document.body);
     curSky = ['--night1', '--night2', '--night3', '--night4'].map(function (v) {
       return hex2rgb(cs.getPropertyValue(v).trim());
