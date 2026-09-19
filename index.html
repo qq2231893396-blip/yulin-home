@@ -744,6 +744,7 @@
     text-align: center; color: rgba(255,250,241,.55); font-size: 12.5px; letter-spacing: .1em; line-height: 2;
   }
   .moon-note { text-align: center; margin-top: 16px; font-size: 11.5px; color: rgba(255,250,241,.5); line-height: 2.1; letter-spacing: .06em; }
+  .moon-sync { text-align: center; margin-top: 14px; font-size: 11.5px; color: rgba(255,250,241,.66); line-height: 1.8; letter-spacing: .06em; }
   .moon-bak {
     font-family: inherit; cursor: pointer; background: none; border: none; padding: 0;
     color: rgba(255,250,241,.72); text-decoration: underline; text-underline-offset: 3px;
@@ -787,6 +788,43 @@
   @keyframes petBreatheSoft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
   @keyframes duckWaddle { from { transform: rotate(-3.2deg) translateY(0); } to { transform: rotate(3.2deg) translateY(-2px); } }
   @keyframes dinoHop { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+  /* 落地小压扁（squash & stretch，像素纸感的小振幅） */
+  .pet-flip.land .pet-sprite { animation: petLand .34s ease; transform-origin: 50% 100%; }
+  @keyframes petLand {
+    0% { transform: scaleY(.82) scaleX(1.12); }
+    55% { transform: scaleY(1.06) scaleX(.95); }
+    100% { transform: none; }
+  }
+  /* 跳跳起跳时影子跟着缩，落下来影子回弹 */
+  .pet-actor.hopping::after { animation: shadowHop .28s ease-in-out infinite alternate; }
+  @keyframes shadowHop {
+    from { transform: translateX(-50%) scale(1); opacity: 1; }
+    to { transform: translateX(-50%) scale(.7); opacity: .55; }
+  }
+  /* 蝴蝶客人：横穿舞台 + 上下扑扇，宠物看见了会自己去追 */
+  .pet-bug {
+    position: absolute; left: -34px; bottom: 96px; z-index: 1;
+    font-size: 17px; pointer-events: none;
+  }
+  .pet-bug[hidden] { display: none; }
+  .pet-bug.fly { animation: bugCross 7s linear forwards; }
+  .pet-bug.rev { left: auto; right: -34px; }
+  .pet-bug.rev.fly { animation-name: bugCrossRev; }
+  @keyframes bugCross { to { transform: translateX(var(--bugdist, 420px)); } }
+  @keyframes bugCrossRev { to { transform: translateX(calc(-1 * var(--bugdist, 420px))); } }
+  .pet-bug span { display: inline-block; animation: bugBob .5s ease-in-out infinite alternate; }
+  @keyframes bugBob { from { transform: translateY(0) rotate(8deg); } to { transform: translateY(-7px) rotate(-8deg); } }
+  /* 毛线球：偶尔滚进舞台，小家伙会过去扒拉两下 */
+  .pet-ball {
+    position: absolute; bottom: 14px; left: 50%; z-index: 1;
+    font-size: 20px; pointer-events: none;
+    transition: margin-left .5s ease, opacity .5s ease;
+    animation: foodBob 1.2s ease-in-out infinite alternate;
+  }
+  .pet-ball[hidden] { display: none; }
+  .pet-ball.out { opacity: 0; }
+  .pet-ball.spin span { display: inline-block; animation: ballSpin .55s ease; }
+  @keyframes ballSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
   .pet-food {
     position: absolute; bottom: 20px; left: 50%; margin-left: 40px;
     font-size: 22px; z-index: 2;
@@ -1164,7 +1202,9 @@
     <div class="drawer" id="drawer" hidden>
       <div class="moon-recs" id="moonRecs"></div>
       <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记过去的一次</button>
-      <p class="moon-note">记录只存在这台手机的浏览器里，不上传、没有账号；<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就好。</p>
+      <p class="moon-sync" id="moonSyncLine"></p>
+      <button class="btn-moon-ghost" id="moonPassBtn" type="button">☁ 云上小屋 · 对暗号</button>
+      <p class="moon-note">记录平常只存在这台手机；对上暗号后，两台手机共用云上的同一本小账。<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就稳了。</p>
     </div>
   </div>
   <a class="cross-chip" href="#/">🏠 回家</a>
@@ -1190,6 +1230,8 @@
         <span class="pet-zzz" id="petZzz" hidden>z</span>
       </div>
       <div class="pet-food" id="petFood" hidden>🍪</div>
+      <div class="pet-ball" id="petBall" hidden><span>🧶</span></div>
+      <div class="pet-bug" id="petBug" hidden><span>🦋</span></div>
     </div>
     <p class="pet-name" id="petName"></p>
     <p class="pet-breed" id="petBreed"></p>
@@ -2019,15 +2061,16 @@
     $('#chipHomeMoon').textContent = '🌙 今晚 · ' + moonPhaseName();
   }
 
-  /* ── 月亮小屋 · 生理期记录 v4（数据只存本机 localStorage）──
-     三种可切换模式（一句话 / 圆月亮 / 时间线），选择记在她手机里：
+  /* ── 月亮小屋 · 生理期记录 v5（本机为准 + 云上小账本同步）──
+     三种可切换模式（一句话 / 圆月亮 / 时间线）：
      · 首屏 = 状态 + 一个会说话的大按钮：点了就记「今天」，不弹窗不填表
      · 补录、改错、备份全收进「过往记录」抽屉，主界面只有状态+按钮
      · 删除即时生效 + 6 秒撤销，不再层层确认
      · 忘了记「走」没关系：下次记「来」时按平均经期自动把上一次收好
      · 周期正常范围 21–35 天、经期 3–7 天，超出只温柔提醒不拦着
      · 预测至少 3 个周期才像样，不足时如实说「再记一次，就能估出下次的日子」
-     · Safari 等浏览器可能清 localStorage → 提供「备份 / 导入」文本码 */
+     · 对上暗号后两台手机共用云上一本账（见「云上小账本」段）；云端够不着时
+       一切照旧记本机，之后自动补；Safari 清 localStorage 也有「备份 / 导入」兜底 */
   var PERIOD_KEY = 'yulin_periods_v1';
   var CYCLE_MIN = 21, CYCLE_MAX = 35, PERIOD_LEN_OK = 7, PERIOD_LEN_LONG = 10, BACKFILL_MAX = 35;
   function loadPeriods() {
@@ -2047,6 +2090,7 @@
   var periods = loadPeriods();
   function savePeriods() {
     try { localStorage.setItem(PERIOD_KEY, JSON.stringify(periods)); } catch (err) {}
+    moonLocalChanged(); /* 云上小账本：本机记录一动就发现（函数定义在后面段落） */
   }
   function toDay(s) { return new Date(s + 'T00:00:00'); }
   function todayStr() {
@@ -2264,9 +2308,7 @@
     renderDots(s);
     moonMain.textContent = s.btn;
     moonMain.classList.toggle('go', s.go);
-    moonMeta.textContent = periods.length
-      ? '已记 ' + periods.length + ' 次 · 数据只留在这台手机里'
-      : '数据只留在这台手机里，不上传、没有账号';
+    moonMeta.textContent = moonMetaLine();
     moonCount.textContent = periods.length ? periods.length + ' 次' : '虚位以待';
     renderMoonList();
     renderHomeLive();
@@ -2476,26 +2518,32 @@
       onYes: function (v) {
         if (!v[0]) { sheetWarn.textContent = '来的日子不能空'; return false; }
         if (v[1] && dayDiff(v[0], v[1]) < 0) { sheetWarn.textContent = '走的日子比开始还早，改一下哦'; return false; }
-        for (var k = 0; k < periods.length; k++) {
+        /* 云同步可能在弹层开着时整体换过 periods 数组，按开始日期重新定位，别认对象 */
+        var cur = null;
+        for (var k = 0; k < periods.length; k++) if (periods[k].start === p.start) { cur = periods[k]; break; }
+        if (!cur) { sheetWarn.textContent = '这条记录刚被另一台手机同步过，关掉再点开看看'; return false; }
+        for (k = 0; k < periods.length; k++) {
           var q = periods[k];
-          if (q === p) continue;
+          if (q === cur) continue;
           if (v[0] <= (q.end || '9999-12-31') && q.start <= (v[1] || '9999-12-31')) {
             sheetWarn.textContent = '跟 ' + prettyShort(q.start) + ' 那条日子重叠了，改一下或先删那条';
             return false;
           }
         }
         var snap = snapPeriods();
-        p.start = v[0];
-        p.end = v[1] || null;
+        cur.start = v[0];
+        cur.end = v[1] || null;
         periods.sort(function (a, b) { return a.start < b.start ? 1 : -1; });
         savePeriods();
         renderMoon();
         showUndo('改好了', undoable(snap));
       },
       onDel: function () {
+        var i = -1;
+        for (var k = 0; k < periods.length; k++) if (periods[k].start === p.start) { i = k; break; }
+        if (i < 0) { sheetWarn.textContent = '这条记录刚被另一台手机同步过，关掉再点开看看'; return false; }
         var snap = snapPeriods();
-        var i = periods.indexOf(p);
-        if (i > -1) periods.splice(i, 1);
+        periods.splice(i, 1);
         savePeriods();
         closeSheet();
         renderMoon();
@@ -2540,6 +2588,303 @@
     });
   });
 
+  /* ── 云上小账本 · 两台手机同一本账 ──
+     门面在 GitHub Pages，账本在旧站的云函数（Netlify Blobs：站点私有存储，
+     只有那边的函数读得到，公开网页/仓库里都看不到）。
+     · 暗号对上才开始同步：暗号只存在这两台手机里，服务端只有它的哈希
+     · 合并永远做加法：谁的记录都不少；同一条两头都改过，取改得晚的那次；
+       删除变成「墓碑」传过去，删了就是删了（重新记同一天会自然复活）
+     · 云暂时够不着（没网、函数没上线）就先记本机，能连上时自动补
+     · 备份码照旧可用：云就算哪天不在了，码在，记录就在 */
+  var MOON_API = 'https://love-you-yh-to-tl.netlify.app/.netlify/functions/moon';
+  /* 调试开关：localStorage 设 yulin_moon_api 可把账本指向本地 mock；平时别动 */
+  try { MOON_API = localStorage.getItem('yulin_moon_api') || MOON_API; } catch (err) {}
+  var MOON_PASS_KEY = 'yulin_moon_pass';
+  var MOON_DEL_KEY = 'yulin_periods_del_v1';
+  var MOON_TS_KEY = 'yulin_periods_ts_v1';
+  var moonPass = '';
+  var moonTomb = {};    /* 墓碑：本机删掉的 start -> 删除时间 */
+  var moonTs = {};      /* 每条记录最后改动时间，两头都改过时谁新听谁的 */
+  var moonPrev = {};    /* 上一次看到的本机记录，用来发现「刚刚动了什么」 */
+  var moonState = 'off'; /* off | busy | ok | offline | badpass */
+  var moonSyncedAt = '';
+  var moonTimer = null;
+  var moonRunning = false;
+  var moonAgain = false;
+  var moonSyncLine = $('#moonSyncLine'), moonPassBtn = $('#moonPassBtn');
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (err) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (err) {} }
+  function snapMap() {
+    var m = {};
+    periods.forEach(function (p) { m[p.start] = { start: p.start, end: p.end }; });
+    return m;
+  }
+  function hmNow() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function loadMoonMeta() {
+    moonPass = lsGet(MOON_PASS_KEY) || '';
+    try { moonTomb = JSON.parse(lsGet(MOON_DEL_KEY) || '{}') || {}; } catch (err) { moonTomb = {}; }
+    try { moonTs = JSON.parse(lsGet(MOON_TS_KEY) || '{}') || {}; } catch (err) { moonTs = {}; }
+  }
+  function saveMoonMeta() {
+    lsSet(MOON_DEL_KEY, JSON.stringify(moonTomb));
+    lsSet(MOON_TS_KEY, JSON.stringify(moonTs));
+  }
+
+  /* 本机记录一动（增/改/删/撤销/导入），这里就发现了 */
+  function moonLocalChanged() {
+    if (!moonPrev) moonPrev = {};
+    var now = Date.now();
+    var cur = snapMap(), seen = {}, s;
+    for (s in cur) {
+      seen[s] = true;
+      var was = moonPrev[s];
+      if (!was || was.end !== cur[s].end) {
+        moonTs[s] = now;
+        if (moonTomb[s]) delete moonTomb[s]; /* 删了又重新记：重新记的算数 */
+      }
+    }
+    for (s in moonPrev) if (!seen[s]) moonTomb[s] = now;
+    moonPrev = cur;
+    saveMoonMeta();
+    if (moonPass) {
+      clearTimeout(moonTimer);
+      moonTimer = setTimeout(function () { moonSync(); }, 1200);
+    } else {
+      renderMoonSync();
+    }
+  }
+
+  /* 合并：云上的账 + 本机的账 → 一本谁都不缺的账。返回待推送的 {data,deleted} */
+  function mergeCloudIntoLocal(doc) {
+    var cData = {}, cDel = {};
+    if (doc && Array.isArray(doc.data)) {
+      doc.data.forEach(function (r) { if (r && r.start) cData[r.start] = r; });
+    }
+    if (doc && Array.isArray(doc.deleted)) {
+      doc.deleted.forEach(function (r) {
+        var s = r && r.start;
+        if (s) cDel[s] = typeof r.t === 'number' ? r.t : 0;
+      });
+    }
+    var oldTomb = moonTomb;
+    var tomb = {}, s;
+    for (s in oldTomb) tomb[s] = oldTomb[s];
+    for (s in cDel) if (!(s in tomb) || cDel[s] > tomb[s]) tomb[s] = cDel[s];
+
+    var loc = {}, starts = {}, map = {};
+    periods.forEach(function (p) { loc[p.start] = p; });
+    for (s in loc) starts[s] = true;
+    for (s in cData) starts[s] = true;
+
+    var recChanged = false;
+    for (s in starts) {
+      var lp = loc[s], cp = cData[s];
+      var th = tomb[s];
+      if (th !== undefined) {
+        /* 有墓碑：比时间，谁的动作晚听谁的（云上删除之后重新记的算数；
+           只是云端还没见到删除的旧账，删除照样生效） */
+        if (cp && (typeof cp.t === 'number' ? cp.t : 0) > th) {
+          delete tomb[s]; /* 云端在删除之后又记了 → 删不作数，记录保留 */
+        } else if (!cp && lp && (moonTs[s] || 0) > th) {
+          delete tomb[s]; /* 本机在云端删除之后又重新记了 → 记录保留 */
+        } else {
+          continue; /* 删除生效：这条从账本里收走（本机有也删，墓碑继续传） */
+        }
+      }
+      if (lp && cp) {
+        var lt = moonTs[s] || 0;
+        var ct = typeof cp.t === 'number' ? cp.t : 0;
+        var end;
+        if (lp.end === cp.end) end = lp.end;
+        else if (lt !== ct) end = (lt > ct ? lp.end : cp.end); /* 谁改得晚听谁的 */
+        else if (lp.end && cp.end) end = (lp.end > cp.end ? lp.end : cp.end);
+        else end = lp.end || cp.end;
+        if (end !== lp.end) recChanged = true;
+        map[s] = { start: s, end: end };
+      } else if (lp) {
+        map[s] = { start: s, end: lp.end };
+      } else {
+        map[s] = { start: s, end: cp.end || null };      /* 云上有、本机没有：补进来 */
+        if (!(s in moonTs) && typeof cp.t === 'number') moonTs[s] = cp.t;
+        recChanged = true;
+      }
+    }
+    moonTomb = tomb;
+
+    var next = [];
+    for (var k in map) next.push(map[k]);
+    next.sort(function (x, y) { return x.start < y.start ? 1 : -1; });
+
+    if (recChanged) {
+      /* 先把 moonPrev 对齐到合并结果，savePeriods 里的改动侦测才不会误记账 */
+      moonPrev = {};
+      next.forEach(function (p) { moonPrev[p.start] = { start: p.start, end: p.end }; });
+      periods = next;
+      savePeriods();
+      try { renderMoon(); } catch (err) {}
+    } else {
+      moonPrev = snapMap();
+    }
+    saveMoonMeta();
+    var deleted = [];
+    for (k in tomb) deleted.push({ start: k, t: tomb[k] });
+    return { data: next, deleted: deleted };
+  }
+
+  function canonMoon(l) {
+    return JSON.stringify(l.slice().sort(function (a, b) { return a.start < b.start ? -1 : 1; }));
+  }
+  function sameAsCloud(doc, data, deleted) {
+    var cd = (doc && Array.isArray(doc.data)) ? doc.data : [];
+    var cx = (doc && Array.isArray(doc.deleted)) ? doc.deleted : [];
+    return canonMoon(data) === canonMoon(cd) && canonMoon(deleted) === canonMoon(cx);
+  }
+
+  /* 云端访问。404（函数还没上线）/ 5xx / 断网 一律按「暂时够不着」处理 */
+  function fetchTimeout(url, opts) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 9000) : null;
+    var o = opts || {};
+    if (ctrl) o.signal = ctrl.signal;
+    return fetch(url, o).then(function (r) {
+      if (timer) clearTimeout(timer);
+      return r;
+    }, function (e) {
+      if (timer) clearTimeout(timer);
+      throw e;
+    });
+  }
+  async function moonApi(method, body) {
+    /* 返回 {state:'ok'|'offline'|'badpass'|'conflict', doc} */
+    var res;
+    try {
+      if (method === 'GET') {
+        res = await fetchTimeout(MOON_API + '?p=' + encodeURIComponent(moonPass));
+      } else {
+        res = await fetchTimeout(MOON_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      }
+    } catch (err) { return { state: 'offline' }; }
+    if (res.status === 401) return { state: 'badpass' };
+    if (!res.ok) return { state: 'offline' };
+    var j = null;
+    try { j = await res.json(); } catch (err) { return { state: 'offline' }; }
+    if (!j || j.ok !== true) return { state: 'offline' };
+    return { state: 'ok', doc: j.doc || null };
+  }
+
+  async function moonSync() {
+    if (!moonPass) { moonState = 'off'; renderMoonSync(); return; }
+    if (moonRunning) { moonAgain = true; return; }
+    moonRunning = true;
+    moonState = 'busy';
+    renderMoonSync();
+
+    var g = await moonApi('GET');
+    if (g.state === 'ok') {
+      var m = mergeCloudIntoLocal(g.doc);
+      var baseRev = (g.doc && typeof g.doc.rev === 'number') ? g.doc.rev : 0;
+      if (sameAsCloud(g.doc, m.data, m.deleted)) {
+        moonState = 'ok'; moonSyncedAt = hmNow(); /* 两边本来就一样，不用写 */
+      } else {
+        var p = await moonApi('POST', { p: moonPass, baseRev: baseRev, data: m.data, deleted: m.deleted });
+        if (p.state === 'ok') { moonState = 'ok'; moonSyncedAt = hmNow(); }
+        else if (p.state === 'badpass') moonState = 'badpass';
+        else if (p.state === 'conflict') {
+          /* 另一台手机刚写过：把它的账拿回来重新合，再补一次 */
+          var m2 = mergeCloudIntoLocal(p.doc);
+          var p2 = await moonApi('POST', {
+            p: moonPass,
+            baseRev: (p.doc && typeof p.doc.rev === 'number') ? p.doc.rev : 0,
+            data: m2.data, deleted: m2.deleted
+          });
+          if (p2.state === 'ok') { moonState = 'ok'; moonSyncedAt = hmNow(); }
+          else moonState = (p2.state === 'badpass') ? 'badpass' : 'offline';
+        }
+        else moonState = 'offline';
+      }
+    } else {
+      moonState = (g.state === 'badpass') ? 'badpass' : 'offline';
+    }
+    moonRunning = false;
+    if (moonAgain) { moonAgain = false; moonSync(); return; }
+    renderMoonSync();
+  }
+
+  /* 顶部一行小字：如实反映记录现在待在哪（含蓄，不吵） */
+  function moonMetaLine() {
+    var n = periods.length ? '已记 ' + periods.length + ' 次' : '数据只留在这台手机里，不上传、没有账号';
+    if (moonState === 'ok') return periods.length ? n + ' · 云上小账本已同步' : '云上小账本 · 对上暗号，两台手机同一本账';
+    if (moonPass) return periods.length ? n + ' · 云端稍后自动补' : n;
+    return n;
+  }
+
+  function renderMoonSync() {
+    if (!moonSyncLine || !moonPassBtn) return;
+    moonPassBtn.textContent = moonPass ? '☁ 云上小屋 · 已对上暗号' : '☁ 云上小屋 · 对暗号';
+    try { moonMeta.textContent = moonMetaLine(); } catch (err) {}
+    var t = '';
+    if (moonState === 'off') t = '记录现在只存在这台手机里';
+    else if (moonState === 'busy') t = '正在和云上的小账本对账…';
+    else if (moonState === 'ok') t = '云上小账本已同步' + (moonSyncedAt ? ' · ' + moonSyncedAt : '');
+    else if (moonState === 'offline') t = '暂时够不着云端，先记在本机；能连上时会自动补上';
+    else if (moonState === 'badpass') t = '暗号对不上，点上面重新对一下';
+    moonSyncLine.textContent = t;
+  }
+
+  moonPassBtn.addEventListener('click', function () {
+    var cfg = {
+      title: '云上小屋 · 对暗号',
+      sub: '对上暗号，两台手机的月亮小屋就是同一本账。暗号问小汤要——他念给你听就好，别发群里。',
+      text: '',
+      yesText: '对一下',
+      noText: '先不用',
+      onYes: function (_, txt) {
+        var p = (txt || '').trim();
+        if (!p) { sheetWarn.textContent = '暗号要填的，问小汤要一个'; return false; }
+        moonPass = p;
+        moonState = 'busy';
+        renderMoonSync();
+        moonApi('GET').then(function (g) {
+          if (g.state === 'badpass') {
+            moonPass = lsGet(MOON_PASS_KEY) || ''; /* 对不上：保留原来的暗号 */
+            moonState = 'badpass'; /* 明确告诉TA没对上，别装作没事发生 */
+            renderMoonSync();
+            return;
+          }
+          lsSet(MOON_PASS_KEY, p);
+          if (g.state === 'offline') {
+            /* 够不着云端：暗号先记下，等能连上时自动开始同步 */
+            moonState = 'offline';
+            renderMoonSync();
+            return;
+          }
+          moonSync();
+        });
+      }
+    };
+    if (moonPass) {
+      cfg.onDel = function () {
+        moonPass = '';
+        try { localStorage.removeItem(MOON_PASS_KEY); } catch (err) {}
+        moonState = 'off';
+        renderMoonSync();
+        closeSheet();
+      };
+    }
+    openSheet(cfg);
+  });
+
+  /* 云上小账本 · 启动 */
+  loadMoonMeta();
+  moonPrev = snapMap();
+  renderMoonSync();
+  if (moonPass) moonSync();
+
   /* ── 宠物屋 · 家里的小家伙们 ──
      设计红线（社区调研结论）：宠物永不死、没有饥饿惩罚、没有打卡压力；
      想加新成员，往 PETS 里照抄一条就行。零食和成长是全屋共享的，
@@ -2554,6 +2899,13 @@
     { id: 'dundun', ic: '🐶', name: '墩墩', breed: '小狗 · 热情本人',
       lines: ['汪！！', '是你是你是你！', '尾巴已摇成螺旋桨', '墩墩！冲！', '（叼来拖鞋邀功中）'] }
   ];
+  /* 追到蝴蝶客人时的专属台词 */
+  var CHASE_LINES = {
+    niannian: '（瞳孔地震）蝴、蝴蝶——',
+    gaga: '嘎！！站住！',
+    tiaotiao: '哔——锁定目标！',
+    dundun: '汪汪汪！是会飞的小饼干吗！'
+  };
   var PET_KEY = 'yulin_pet_v1';
   var STAGE_NAMES = ['幼崽期', '少年期', '成年'];
   function dayStamp() {
@@ -2588,7 +2940,7 @@
       petRoster = $('#petRoster'), petMeta = $('#petMeta'), petStageEl = $('#petStage'),
       petZzz = $('#petZzz'),
       petActor = $('#petActor'), petFlip = $('#petFlip'), petSprite = $('#petSprite'),
-      petFoodEl = $('#petFood');
+      petFoodEl = $('#petFood'), petBugEl = $('#petBug'), petBallEl = $('#petBall');
   var bubbleTimer = null;
   function curPet() {
     for (var i = 0; i < PETS.length; i++) if (PETS[i].id === petS.active) return PETS[i];
@@ -2604,21 +2956,39 @@
      四张表均重排为带 1-2px 透明边距的 PNG（原素材内容贴满格子边缘，铺出来像被裁掉一截），base64 内嵌，无外链。 */
   var SPR_ONEKO = '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';
   var SPR_DOG = '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';
-  var SPR_DINO = 'iVBORw0KGgoAAAANSUhEUgAAAMAAAAAzCAYAAADB2gewAAAB90lEQVR42u3dvZaCMBRF4TuzbHw/Sh/PUp/PcqayYYn8hRsC327HwQ2Lm5OQECMAAOfkZ+sveL1efyWPd71efzIvEP9j+/9qA3BmLlmVe7vdVh3vfr9HzZaH/zH9JQCMAbas4LWVO1TJW/dF+Z/D/5JdcY/HIyIiuq5rssV4+79p9TxapfT9owu0gK7r3PgGwctvHmAv98/FJV3fDYIE0AKhSYwBoAAABQAYA9Qje6odx7r+S/0lACRAfFmENHfKe+ny1aEp77lT77X8p069P5/PXfq3fv2X+ksASIBPi4/m9Kk+Ve3URUyl+p78+RsDAFlPgdZUbezg1Tv+/CUAJMDYqHpsVL62avv/X6pPyp+/BADWjgGGRvWl+mvv45Z+9Y0/fwkAlHoKtFULkbUWhT9/CQDsdTVo9pZ7/PlLAEiAfgVttSFRVgvAn38TXaCsHcb4859VAFoi/mfyNwZA2Bw38jYp7T+vbW2TVf7H8pcAkAAZlZzd8vDnLwGA0gkQE9dhj/299o+tje0iwL+u/7fPlTwXCYAwExzzn+/2W5r+uu+hlqjWxEvff2xiZajPyj/X/9sqzxLnIgEgAdZU8lB/rPQOa2FJwKn8s85HAkACZKy/7u8SsJcWa6oX/7r+EgCIBn8oe29vIE314n+O+0ICAACAE/IP4dAp8NfarycAAAAASUVORK5CYII=';
-  var SPR_DUCK = 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAYAAAD7PHgWAAABNElEQVR42mNgGAWUAUZiFf4/0/Afr0EmDYy0cCDTYA9BFkIKFBUVISH3+iyKuFLWFQYGBgaGe9N0UEKY2iHJNOTT4PscBpS0J+Dti99Az80jPATRQ4z1qRyK/G/pR9hDUtSYYUSmQRb0kIOF2Omn76Ay71A0mDLIUVRukhrCTMOmJoGBj6uYUUKGj9cLJQ3CAVq5iZ5WMQBU/afP2xgYGBgY+MP+Mg7PEEQPSYwQxBVyuEISR8gNn7qYaAALOUIhSWTIjcAQxBWSRObW4dsepDgk0QCxITdyQhAWIvDykIC6kdeiJrVuRgfnejgZGBgYGIxKvpOU9oZMCFIN7Dfj+b/fjOc/seLDJgRHHTjg5eANZ9H/DAwMDM8/f8dIe6MjC6SEGCEgyQspDzX2vh4tB0cBMgAAKxV0XhHkASMAAAAASUVORK5CYII=';
+  var SPR_DINO = 'iVBORw0KGgoAAAANSUhEUgAAASAAAAAzCAYAAAA3ttUBAAACh0lEQVR4nO3dsW7CMBAAUFN14f8Y+TxG+D7GVqoUCbkNSRrbZ8N7S4e2cBxn52LikBIAwLs51H6C+/3+VfLxjsdj9ZgfiV/+1U+98ftR8LEBNvlMjTqH8/m86/Eul0tqSfzyr37qj18dEBDmULuD2Dtzzs2ktdeCxC//6idVH7/VTsHmXK/Xn5+n0ymNaIp/MurrGNWr1M+o8ZfWfAJ6BVPx5JMRrK0dgiYgbwDqh4kO6B90PlCGCWgjHRyU42N4IIwJCAhjAgLCdLMG1HqrBa+Vf/GPmX8dENBPB5Rvwty65eG/t6+Yu+R769aLqPjn5PHfbrdNzy//71E/5zeNXwcExHdA+ebLLed0f82aazexlTp3F7/8q5803PjVAQHjfQq2Z9Zco9XtNh6JX/7VT9vxqwMC+uuApm5gaVV8b9eQ/3+pNSHxy7/6Sd2PXx0Q0O8a0Nyqeqn1kulxS9/6cSJ++Vc/qdvxqwMC+v8UrFaH0movj/jlX/3UYy8YMJxudsO3/srl0sQv/+pnO2tAQHwHNB3Ba30hX23il3/1k4Ybv2GnYK2+4bQW8cu/+km7x++vCUgnEUv+5f+d6scaEBBmsX0qPZPm1wu02vUufvlXP/2NXx0QEObQqpNo3fnkxC//6id1N351QMA4HdDa+4As/T6qA1p7F3/xx+b/2d9F1JL6v1TJuQ4I6P9CxPz6grxTyO+7M9dJRF14mMe/dGHh3JqR+Nvm/9ku65bvhfqvk3MdEDDOVoylI9TSka43tlT0mf9et+io/7J0QMB4m1G3HqHyb6no5Qi3Ni7xx+a/N+r/6FMwYGzVjjZLa0BRR7q1cYk/Nv+j6/V13jurf2tAAAAAqZVvpEtAuQnWzUcAAAAASUVORK5CYII=';
+  var SPR_DUCK = 'iVBORw0KGgoAAAANSUhEUgAAAKAAAAAkCAYAAAAO7jHjAAACmUlEQVR4nO2bu0oDQRSGNxoLQaMWKWzEWFlYeevFSoOtDyGCBHwAwVYQQXwIW0msxN5LKotUiQghxYIxiZBKVtjdEWbM7MXszJy4/9dM3Jks/56d8+85i7EsAABIK5moC52nEyfwROsnkc+lAur6wGDGJMcB0EI2bEGhUPCcxX7mji8dvLhj/WqFcyDdTiPTJ2JKHwgGDgiMEuoG7UOLq61mi3vBJ9y50eowMn1H56/ueFFaNKoPDPkIHlXEjQdoNm/ZMEeZaC5w8x/lm8FOmF/zP3jzqqCuD8Tj3zogNUw7DdXmMis6C3OUx+a7P8NGjw2Ld5y4Af/rhVDXJwNdejBwwJRSLTbc8aPc4EoW5nw/hLzeGpbY2d65HuecIze9K9RYIcLFdcL6bq/ijjP7X39yImr6qHbpbSJvN+CAhpqki5LeJolq8xZ7A7LMF50msmWzeXZhCTnfqOgDPHDAhKDaJLWJ6kp+A0qc4xemnIW6PuI4t3tOpPmY8YMDJsTcJWvo3gLXda777o3q9pp8kyQ6jCRBpO8TJTc8KV2RE1f4O/dz/oozaCNmlTuNZN6YsxjWhxqVBw4IjCaGug0oEUympqKmz05njQoHpIZNpUTwajZWw0WlWz+NpWvoDcgC8atolazTDXV91FEdPzggVWxiJYIihr4IadHqUz2bdMfV476RwFHVx3TlQpzF9AZUHT84oGG6KS8REsui+80pN1O2Hj4zUY7rhqq+DlGH1hU//CoOGAWPYMPM+I4mdxjvnwn+S9MhAgcEo+2Ate28m6GtnlejMFhGm4a6Puqojh8ewYappTxBMkkFLIz5aa+bW76zldYy1PWF6d3ya0BxA+rq0nXHDw6oGfEGtyI6H/ue7gQBAABgKeIbri8NG7TBO+QAAAAASUVORK5CYII=';
   var ACTORS = {
+    /* 念念/墩墩：8x4 表是富矿，原先只用 7 帧——现在把坐姿摇尾(0,0/0,1)、
+       挠痒(1,2)、伸懒腰(1,0→3,0)、压低潜伏(2,2/2,3)、背影张望(6,2/6,3/7,1)、
+       打滚(5,1/5,2/6,1)、起跳(0,3/5,3 与 0,2/1,0) 全用上 */
     niannian: { sheet: SPR_ONEKO, mime: 'png', fw: 34, fh: 34, sheetW: 272, sheetH: 136, scale: 3.2, dirByFrame: true, frameMs: 110, speed: 7,
-      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[3,3]], alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } },
-    gaga: { sheet: SPR_DUCK, mime: 'png', fw: 40, fh: 36, sheetW: 40, sheetH: 36, scale: 3.4, dirByFrame: false, faceLeft: true, waddle: true, solo: true, frameMs: 130, speed: 5,
-      acts: { walkR: [[0,0]], walkL: [[0,0]], idle: [[0,0]], alert: [[0,0]], sleep: [[0,0]], happy: [[0,0]] } },
-    tiaotiao: { sheet: SPR_DINO, mime: 'png', fw: 48, fh: 51, sheetW: 192, sheetH: 51, scale: 2.8, dirByFrame: false, hop: true, frameMs: 140, speed: 6,
-      acts: { walkR: [[0,0],[3,0]], walkL: [[0,0],[3,0]], idle: [[2,0]], alert: [[0,0]], sleep: [[2,0]], happy: [[0,0]], eat: [[0,0]] } },
+      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[0,0],[0,1]],
+              look: [[3,3],[6,2],[6,3],[6,2]], scratch: [[1,2],[0,2]], stretch: [[1,0],[3,0]],
+              stalk: [[2,2],[2,3]], pounce: [[0,3],[5,3]], roll: [[5,1],[5,2],[6,1]],
+              alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } },
+    gaga: { sheet: SPR_DUCK, mime: 'png', fw: 40, fh: 36, sheetW: 160, sheetH: 36, scale: 3.4, dirByFrame: false, faceLeft: true, waddle: true, solo: true, frameMs: 130, speed: 5,
+      acts: { walkR: [[0,0]], walkL: [[0,0]], idle: [[0,0],[0,0],[1,0]],
+              look: [[0,0],[1,0]], scratch: [[3,0]],
+              alert: [[0,0]], sleep: [[2,0]], happy: [[0,0]], eat: [[3,0]] } },
+    tiaotiao: { sheet: SPR_DINO, mime: 'png', fw: 48, fh: 51, sheetW: 288, sheetH: 51, scale: 2.8, dirByFrame: false, hop: true, frameMs: 140, speed: 6,
+      acts: { walkR: [[0,0],[3,0]], walkL: [[0,0],[3,0]], idle: [[0,0],[0,0],[4,0]],
+              look: [[0,0],[0,0],[4,0]], stalk: [[2,0]], pounce: [[3,0]],
+              alert: [[0,0]], sleep: [[5,0]], happy: [[1,0]], eat: [[1,0],[0,0]] } },
     dundun: { sheet: SPR_DOG, mime: 'png', fw: 34, fh: 34, sheetW: 272, sheetH: 136, scale: 3.2, dirByFrame: true, frameMs: 110, speed: 7,
-      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[3,3]], alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } }
+      acts: { walkR: [[3,0],[3,1]], walkL: [[4,2],[4,3]], idle: [[0,0],[0,1]],
+              look: [[3,3],[6,2],[7,1],[6,2]], stretch: [[1,1],[3,0]],
+              stalk: [[2,2],[2,3]], pounce: [[0,2],[1,0]], roll: [[5,2],[5,1],[6,1]],
+              alert: [[7,3]], sleep: [[2,0],[2,1]], happy: [[3,2]], eat: [[5,0],[6,0],[7,0]] } }
   };
 
   var petEng = { actor: null, actorId: '', state: 'idle', stateUntil: 0, target: null,
-                 dir: 1, x: 0, fi: 0, lastFrame: 0, eatPending: false };
+                 dir: 1, x: 0, fi: 0, lastFrame: 0, eatPending: false,
+                 zoom: false, ballPending: false, ballX: 0,
+                 landTimer: null, bugSpawn: null, bugLife: null, ballTimer: null, ballLife: null };
+  /* 尊重系统「减少动态效果」：不出环境互动、不加 CSS 抖动，只保留温和的换帧 */
+  var petCalm = false;
+  try { petCalm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (err) {}
   function petStageRange() {
     var w = petStageEl.clientWidth || 340;
     var half = (petSprite.offsetWidth || 60) / 2;
@@ -2643,13 +3013,16 @@
     petFlip.classList.remove('waddle');
     petFlip.classList.remove('hop');
     petFlip.classList.remove('breathe');
+    petFlip.classList.remove('land');
     petEng.x = 0;
+    petEng.zoom = false;
+    petEng.ballPending = false;
     petActor.style.transform = 'translateX(0px)';
     petApplySize(a);
     petStateGo('idle', 1200);
   }
   function petSetAct(name) {
-    var a = petEng.actor, act = a.acts[name] || a.acts.happy;
+    var a = petEng.actor, act = a.acts[name] || a.acts.idle || a.acts.happy;
     var f = act[petEng.fi % act.length];
     var k = petEng.drawScale || a.scale;
     petSprite.style.backgroundPosition = (-f[0] * a.fw * k) + 'px ' + (-f[1] * a.fh * k) + 'px';
@@ -2658,25 +3031,27 @@
     petEng.state = s;
     petEng.stateUntil = performance.now() + (ms || 0);
     petEng.target = s === 'walk' && target != null ? target : null;
+    if (s !== 'zoomies') petEng.zoom = false;
+  }
+  /* 落地小压扁：squoosh 一下再弹回来，走路到达、扑空落地都会用 */
+  function petLandSquash() {
+    if (petCalm) return;
+    petFlip.classList.remove('land');
+    void petFlip.offsetWidth; /* 重触发动画 */
+    petFlip.classList.add('land');
+    clearTimeout(petEng.landTimer);
+    petEng.landTimer = setTimeout(function () { petFlip.classList.remove('land'); }, 380);
+  }
+  /* 站着不无聊：从会的小动作里挑一个（每只宠物会的不一样） */
+  function petChainAct() {
+    var a = petEng.actor, pool = [];
+    var names = ['look', 'look', 'scratch', 'stretch', 'roll'];
+    for (var i = 0; i < names.length; i++) if (a.acts[names[i]]) pool.push(names[i]);
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : 'idle';
   }
   function petNextState() {
-    var r = Math.random();
-    if (petEng.state === 'sleep' || petEng.state === 'eat' || petEng.state === 'alert') {
-      petStateGo('idle', 1000 + Math.random() * 1500);
-      return;
-    }
-    var range = petStageRange();
-    if (r < 0.6) {
-      petEng.dir = Math.random() < 0.5 ? -1 : 1;
-      petStateGo('walk', 12000, (Math.random() * 1.5 - 0.75) * range);
-    } else if (r < 0.85) {
-      petStateGo('idle', 1800 + Math.random() * 2600);
-    } else {
-      petStateGo('sleep', 5000 + Math.random() * 5000);
-    }
-  }
-  function petArrive() {
-    if (petEng.eatPending) {
+    var s = petEng.state, a = petEng.actor;
+    if (s === 'stalk' && petEng.eatPending) { /* 先凑近嗅一嗅，嗅完开吃 */
       petEng.eatPending = false;
       petStateGo('eat', 1300);
       petFoodEl.classList.add('eating');
@@ -2684,9 +3059,83 @@
       celebrate(petActor);
       petTalk();
       showUndo(curPet().name + ' 吃得津津有味 · 成长 +10', null);
-    } else {
-      petStateGo('idle', 1200 + Math.random() * 2200);
+      return;
     }
+    if (s === 'stalk' && a.acts.pounce) { /* 潜伏够了就扑一下（可能扑空） */
+      petStateGo('pounce', 700);
+      return;
+    }
+    if (s === 'sleep' || s === 'eat' || s === 'alert' || s === 'pounce' ||
+        s === 'stalk' || s === 'play') {
+      petStateGo('idle', 1000 + Math.random() * 1500);
+      return;
+    }
+    var r = Math.random(), range = petStageRange();
+    if (petEng.ballPending) { /* 地上有毛线球？别的先放放，先去玩球 */
+      var stand2 = (petSprite.offsetWidth || 60) / 2 + 14;
+      petEng.dir = petEng.ballX > petEng.x ? 1 : -1;
+      petStateGo('walk', 12000, petEng.ballX - petEng.dir * stand2);
+    } else if (r < 0.34) {
+      petEng.dir = Math.random() < 0.5 ? -1 : 1;
+      petStateGo('walk', 12000, (Math.random() * 1.5 - 0.75) * range);
+    } else if (r < 0.56) {
+      petStateGo(petChainAct(), 2200 + Math.random() * 1800);
+    } else if (r < 0.66 && a.acts.stalk) {
+      petStateGo('stalk', 1300 + Math.random() * 800);
+    } else if (r < 0.74 && !petCalm) {
+      petStateGo('zoomies', 2200 + Math.random() * 1800); /* 突然兴奋，来回冲刺 */
+    } else if (r < 0.9) {
+      petStateGo('idle', 1800 + Math.random() * 2600);
+    } else {
+      petStateGo('sleep', 5000 + Math.random() * 5000);
+    }
+  }
+  function petArrive() {
+    petLandSquash();
+    if (petEng.eatPending) { petStateGo('stalk', 900); return; } /* 到了零食边先嗅探 */
+    if (petEng.ballPending) { playBall(); return; }
+    petStateGo('idle', 1200 + Math.random() * 2200);
+  }
+  function petBugX() {
+    if (petBugEl.hidden) return null;
+    var br = petBugEl.getBoundingClientRect(), sr = petStageEl.getBoundingClientRect();
+    return (br.left + br.width / 2) - (sr.left + sr.width / 2);
+  }
+  function catchBug() {
+    petBugEl.hidden = true;
+    petBugEl.classList.remove('fly', 'rev');
+    clearTimeout(petEng.bugLife);
+    var br = petBugEl.getBoundingClientRect();
+    for (var i = 0; i < 4; i++) {
+      (function (k) {
+        setTimeout(function () { spawnHeart(br.left + (Math.random() * 26 - 13), br.top + (Math.random() * 14 - 7), true); }, k * 90);
+      })(i);
+    }
+    try { popSound(); } catch (err) {}
+    petBubble.textContent = CHASE_LINES[curPet().id] || '抓到啦！';
+    petBubble.hidden = false;
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () { petBubble.hidden = true; }, 2600);
+    petStateGo('alert', 1100);
+  }
+  function playBall() {
+    petEng.ballPending = false;
+    petStateGo('play', 1500);
+    var dx = petEng.x >= petEng.ballX ? 1 : -1; /* 朝远处拨 */
+    petBallEl.style.marginLeft = (petEng.ballX + dx * 30) + 'px';
+    petBallEl.classList.add('spin');
+    var br = petBallEl.getBoundingClientRect();
+    setTimeout(function () {
+      for (var i = 0; i < 2; i++) spawnHeart(br.left + 8 + i * 16, br.top, true);
+    }, 380);
+    setTimeout(function () { petBallEl.classList.remove('spin'); }, 620);
+    clearTimeout(petEng.ballLife);
+    petEng.ballLife = setTimeout(hideBall, 2600);
+  }
+  function hideBall() {
+    if (petBallEl.hidden) return;
+    petBallEl.classList.add('out');
+    setTimeout(function () { petBallEl.hidden = true; petBallEl.classList.remove('out', 'spin'); }, 520);
   }
   function petEngineTick(ts) {
     requestAnimationFrame(petEngineTick);
@@ -2694,43 +3143,106 @@
     if (ts - petEng.lastFrame < (petEng.actor.frameMs || 120)) return;
     petEng.lastFrame = ts;
     petEng.fi++;
-    var a = petEng.actor;
+    var a = petEng.actor, s = petEng.state;
     var now = performance.now();
-    if (petEng.state === 'walk') {
-      petSetAct(petEng.dir > 0 ? 'walkR' : 'walkL');
-      petEng.x += petEng.dir * a.speed;
+    if (s === 'walk' || s === 'zoomies' || s === 'chase') {
+      var sp = a.speed * (s === 'zoomies' ? 2 : s === 'chase' ? 1.35 : 1);
       var range = petStageRange();
-      var arrived = petEng.target != null &&
-        ((petEng.dir > 0 && petEng.x >= petEng.target) || (petEng.dir < 0 && petEng.x <= petEng.target));
-      if (arrived) {
-        petEng.x = petEng.target;
-        petActor.style.transform = 'translateX(' + petEng.x + 'px)';
-        petArrive();
-      } else if (petEng.x > range || petEng.x < -range) {
-        petEng.x = Math.max(-range, Math.min(range, petEng.x));
-        petActor.style.transform = 'translateX(' + petEng.x + 'px)';
-        petStateGo('idle', 1500 + Math.random() * 2500);
-      } else {
+      if ((s === 'zoomies' || s === 'chase') && now > petEng.stateUntil) {
+        petStateGo('alert', 1100); /* 跑完站定喘口气 */
+      } else if (s === 'zoomies') {
+        petSetAct(petEng.dir > 0 ? 'walkR' : 'walkL');
+        petEng.x += petEng.dir * sp;
+        if (petEng.x > range || petEng.x < -range) { /* 冲到墙边就掉头，越跑越嗨 */
+          petEng.x = Math.max(-range, Math.min(range, petEng.x));
+          petEng.dir *= -1;
+        }
         petActor.style.transform = 'translateX(' + petEng.x.toFixed(1) + 'px)';
+      } else if (s === 'chase') {
+        var bx = petBugX();
+        if (bx == null) petStateGo('idle', 900);
+        else if (Math.abs(petEng.x - bx) < 26) catchBug();
+        else {
+          petEng.dir = bx > petEng.x ? 1 : -1;
+          petSetAct(petEng.dir > 0 ? 'walkR' : 'walkL');
+          petEng.x += petEng.dir * sp;
+          if (petEng.x > range) { petEng.x = range; }
+          if (petEng.x < -range) { petEng.x = -range; }
+          petActor.style.transform = 'translateX(' + petEng.x.toFixed(1) + 'px)';
+        }
+      } else {
+        petSetAct(petEng.dir > 0 ? 'walkR' : 'walkL');
+        petEng.x += petEng.dir * sp;
+        var arrived = petEng.target != null &&
+          ((petEng.dir > 0 && petEng.x >= petEng.target) || (petEng.dir < 0 && petEng.x <= petEng.target));
+        if (arrived) {
+          petEng.x = petEng.target;
+          petActor.style.transform = 'translateX(' + petEng.x + 'px)';
+          petArrive();
+        } else if (petEng.x > range || petEng.x < -range) {
+          petEng.x = Math.max(-range, Math.min(range, petEng.x));
+          petActor.style.transform = 'translateX(' + petEng.x + 'px)';
+          petStateGo('idle', 1500 + Math.random() * 2500);
+        } else {
+          petActor.style.transform = 'translateX(' + petEng.x.toFixed(1) + 'px)';
+        }
       }
     } else {
-      petSetAct(petEng.state === 'sleep' ? 'sleep'
-              : petEng.state === 'alert' ? 'alert'
-              : petEng.state === 'eat' ? (a.acts.eat ? 'eat' : 'happy')
-              : 'idle');
+      petSetAct(s === 'sleep' ? 'sleep'
+              : s === 'alert' ? 'alert'
+              : s === 'play' ? 'happy'
+              : s);
       if (petIsNight() && petEng.state !== 'sleep' && now > petEng.stateUntil) petStateGo('sleep', 3600000);
       else if (now > petEng.stateUntil) petNextState();
     }
-    var walking = petEng.state === 'walk';
+    var walking = petEng.state === 'walk' || petEng.state === 'zoomies' || petEng.state === 'chase';
     var faceFlip = (petEng.dir < 0) !== !!a.faceLeft;
     if (a.dirByFrame) faceFlip = false; /* 素材自带左右向帧，再镜像会倒着走、脸贴盒边像被裁 */
     petFlip.classList.toggle('face-l', faceFlip);
-    petFlip.classList.toggle('waddle', walking && !!a.waddle);
-    petFlip.classList.toggle('hop', walking && !!a.hop);
-    petFlip.classList.toggle('breathe', !walking && !!a.solo);
+    petFlip.classList.toggle('waddle', walking && !!a.waddle && !petCalm);
+    petFlip.classList.toggle('hop', walking && !!a.hop && !petCalm);
+    petActor.classList.toggle('hopping', walking && !!a.hop && !petCalm);
+    petFlip.classList.toggle('breathe', !walking && petEng.state !== 'sleep' && !petCalm); /* 四只站着我都会喘气，不再当雕像 */
     petZzz.hidden = petEng.state !== 'sleep';
   }
   requestAnimationFrame(petEngineTick);
+  /* 环境小互动的排班：蝴蝶 8 秒后头回登场，之后 24-54s 一趟；毛线球 15s 后头回，之后 40-80s 一次 */
+  petEng.bugSpawn = setTimeout(spawnBug, 8000);
+  petEng.ballTimer = setTimeout(spawnBall, 15000);
+  function petFree() {
+    var s = petEng.state;
+    return s !== 'sleep' && s !== 'eat' && s !== 'alert' && s !== 'chase' && s !== 'play' && s !== 'stalk';
+  }
+  function petPageOn() { return petStageEl.offsetWidth > 0 && !document.hidden; }
+  function spawnBug() {
+    petEng.bugSpawn = setTimeout(spawnBug, 24000 + Math.random() * 30000);
+    if (petCalm || !petPageOn() || !petEng.actor || !petFree() || petEng.ballPending) return; /* 有球在先，蝴蝶改天再来 */
+    var rev = Math.random() < 0.5;
+    petBugEl.classList.toggle('rev', rev);
+    petBugEl.style.bottom = (70 + Math.floor(Math.random() * 60)) + 'px';
+    petBugEl.style.setProperty('--bugdist', (petStageEl.clientWidth + 80) + 'px');
+    petBugEl.hidden = false;
+    petBugEl.classList.remove('fly');
+    void petBugEl.offsetWidth;
+    petBugEl.classList.add('fly');
+    petStateGo('chase', 6800);
+    petEng.bugLife = setTimeout(function () { petBugEl.hidden = true; petBugEl.classList.remove('fly', 'rev'); }, 7200);
+  }
+  function spawnBall() {
+    petEng.ballTimer = setTimeout(spawnBall, 40000 + Math.random() * 40000);
+    if (petCalm || !petPageOn() || !petEng.actor || !petFree() || petEng.eatPending || !petBugEl.hidden) return; /* 蝴蝶在场就改天 */
+    var bx = (Math.random() * 1.6 - 0.8) * petStageRange() * 0.8;
+    petEng.ballX = bx;
+    petEng.ballPending = true;
+    petBallEl.style.marginLeft = bx + 'px';
+    petBallEl.hidden = false;
+    /* 小家伙有空就来玩：主动走过去 */
+    petEng.dir = bx > petEng.x ? 1 : -1;
+    var stand = (petSprite.offsetWidth || 60) / 2 + 14;
+    petStateGo('walk', 9000, bx - petEng.dir * stand);
+    clearTimeout(petEng.ballLife);
+    petEng.ballLife = setTimeout(function () { petEng.ballPending = false; hideBall(); }, 34000);
+  }
   function petFeedNow() {
     var range = petStageRange();
     var fx = (Math.random() * 1.3 - 0.65) * range;
