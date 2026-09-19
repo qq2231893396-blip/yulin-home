@@ -46,10 +46,13 @@
 })();
 </script>
 <style>
+  /* 星星亮度乘数：白天淡出、夜晚恢复（注册后可平滑过渡） */
+  @property --star-o { syntax: "<number>"; inherits: true; initial-value: 1; }
   :root {
     --night1: #1f2040; --night2: #35345f; --night3: #5c4d78; --night4: #97718a;
     --paper: #fffaf1; --ink: #4d4139; --ink-soft: #8a7a6d;
     --rose: #c98a8a; --rose-deep: #b96f6f; --gold: #d4b483;
+    --star-o: 1; --vig-o: 1;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -74,14 +77,18 @@
     position: absolute; border-radius: 50%; background: #fff;
     opacity: .18; animation: twinkle var(--d, 2.6s) ease-in-out infinite alternate;
   }
-  @keyframes twinkle { from { opacity: .12; } to { opacity: .85; } }
+  @keyframes twinkle { from { opacity: calc(.12 * var(--star-o)); } to { opacity: calc(.85 * var(--star-o)); } }
+  body[data-phase="day"] .star { animation-play-state: paused; }
   .moon {
     position: absolute; top: 7%; right: 10%;
     width: 62px; height: 62px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #fff8e9, #f5dfae 62%, #eed6a0);
     box-shadow: 0 0 38px 10px rgba(255,230,170,.28), 0 0 110px 36px rgba(255,220,150,.12);
     animation: moonGlow 6s ease-in-out infinite alternate;
+    opacity: 0; cursor: pointer;
+    transition: opacity 1.4s ease, left 2.5s ease, top 2.5s ease, right 2.5s ease;
   }
+  .moon.up { opacity: 1; }
   @keyframes moonGlow { from { filter: brightness(.96); } to { filter: brightness(1.06); } }
   .shooting {
     position: absolute; width: 120px; height: 2px; border-radius: 2px;
@@ -92,6 +99,112 @@
     0%   { opacity: 0;   transform: translate(0,0) rotate(26deg); }
     10%  { opacity: .9; }
     100% { opacity: 0;   transform: translate(-280px,150px) rotate(26deg); }
+  }
+
+  /* ── 天色引擎 · 日夜 × 四季 ─────────────────────────── */
+  /* 四季点缀色（色相微移，明度结构不变；印章/高亮字/按钮自动跟随） */
+  body[data-season="spring"] { --rose: #d695a8; --rose-deep: #bf7590; --gold: #b5c98f; }
+  body[data-season="summer"] { --rose: #d98a7c; --rose-deep: #c06e62; --gold: #8fc6bd; }
+  body[data-season="autumn"] { --rose: #d09a6c; --rose-deep: #b97e52; --gold: #d9b46e; }
+  body[data-season="winter"] { --rose: #b4a4c8; --rose-deep: #9c88b4; --gold: #a4c2d8; }
+
+  /* 时段状态：星星走 --star-o、暗角走 --vig-o（由天色引擎 JS 直写，即时生效） */
+  body[data-phase="dawn"] { --star-o: .3; --vig-o: .7; }
+  body[data-phase="day"] { --star-o: 0; --vig-o: .35; }
+  body[data-phase="dusk"] { --star-o: .5; --vig-o: .7; }
+  body::after { opacity: var(--vig-o, 1); }
+
+  .sun {
+    position: absolute; width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #fff7dc, #ffd98e 58%, #ffb45e);
+    box-shadow: 0 0 44px 14px rgba(255,205,120,.4), 0 0 130px 46px rgba(255,190,110,.16);
+    opacity: 0; cursor: pointer; pointer-events: none;
+    transition: opacity 1.4s ease, left 2.5s ease, top 2.5s ease;
+  }
+  .sun.up { opacity: 1; }
+  .sun.wink { animation: winkA 1.2s ease; }
+  body[data-phase="dawn"] .sun, body[data-phase="dusk"] .sun {
+    background: radial-gradient(circle at 38% 34%, #fff0d6, #ffbe78 55%, #ff9052);
+    box-shadow: 0 0 52px 18px rgba(255,160,90,.45), 0 0 140px 54px rgba(255,140,80,.2);
+  }
+
+  /* 四季飘落特效层（花瓣 / 萤火虫 / 落叶 / 雪花） */
+  #seasonFx { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+  #seasonFx i { position: absolute; top: -6vh; will-change: transform; display: block; }
+  .petal {
+    width: var(--sz, 12px); height: calc(var(--sz, 12px) * 1.18);
+    background: radial-gradient(ellipse at 32% 26%, #ffe4ee, #f6adc5 62%, #e98fb2);
+    border-radius: 80% 20% 72% 28% / 74% 28% 80% 20%;
+    opacity: .85;
+    animation: fxFall var(--fd, 10s) linear var(--fdel, 0s) infinite;
+  }
+  .leaf {
+    width: var(--sz, 14px); height: calc(var(--sz, 14px) * 1.06);
+    background: linear-gradient(135deg, var(--lc1, #e2a35c), var(--lc2, #c47a3e));
+    border-radius: 6% 62% 6% 62%; opacity: .88;
+    animation: fxFall var(--fd, 10s) linear var(--fdel, 0s) infinite;
+  }
+  .snow {
+    top: -4vh; width: var(--sz, 5px); height: var(--sz, 5px); border-radius: 50%;
+    background: radial-gradient(circle, #fff, rgba(255,255,255,.72) 58%, rgba(255,255,255,0) 74%);
+    opacity: .9;
+    animation: fxSnow var(--fd, 12s) linear var(--fdel, 0s) infinite;
+  }
+  .firefly {
+    top: auto; width: 5px; height: 5px; border-radius: 50%;
+    background: radial-gradient(circle, #f2ffd9, #c4ec8e 55%, rgba(196,236,142,0) 78%);
+    box-shadow: 0 0 10px 3px rgba(196,240,140,.4);
+    opacity: 0;
+    animation:
+      ffGlow var(--fd, 5s) ease-in-out var(--fdel, 0s) infinite,
+      ffDrift var(--fd2, 14s) ease-in-out var(--fdel, 0s) infinite alternate;
+  }
+  @keyframes fxFall {
+    0%   { transform: translate3d(0, -6vh, 0) rotate(0deg); }
+    25%  { transform: translate3d(var(--sw, 24px), 24vh, 0) rotate(calc(var(--spin, 360deg) * .25)); }
+    50%  { transform: translate3d(calc(var(--sw, 24px) * -1), 52vh, 0) rotate(calc(var(--spin, 360deg) * .5)); }
+    75%  { transform: translate3d(var(--sw, 24px), 78vh, 0) rotate(calc(var(--spin, 360deg) * .75)); }
+    100% { transform: translate3d(0, 112vh, 0) rotate(var(--spin, 360deg)); }
+  }
+  @keyframes fxSnow {
+    0%   { transform: translate3d(0, -4vh, 0); }
+    100% { transform: translate3d(var(--drift, 18px), 112vh, 0); }
+  }
+  @keyframes ffGlow { 0%, 16% { opacity: 0; } 42% { opacity: .95; } 58% { opacity: .22; } 78% { opacity: .8; } 100% { opacity: 0; } }
+  @keyframes ffDrift { from { transform: translate(0, 0); } to { transform: translate(var(--dx, 40px), var(--dy, -60px)); } }
+
+  /* 天色面板（点月亮/太阳呼出） */
+  #ambPanel {
+    position: fixed; top: calc(12px + env(safe-area-inset-top)); right: 12px; z-index: 66;
+    width: min(292px, calc(100vw - 24px));
+    background: rgba(21, 21, 46, .8); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.16); border-radius: 16px;
+    padding: 13px 13px 11px; box-shadow: 0 18px 50px rgba(8,8,26,.5);
+    opacity: 0; visibility: hidden; transform: translateY(-8px);
+    transition: opacity .35s ease, transform .35s ease, visibility 0s .35s;
+  }
+  #ambPanel.on {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  .amb-row { display: flex; align-items: center; gap: 8px; }
+  .amb-row + .amb-row { margin-top: 8px; }
+  .amb-label { flex: 0 0 auto; font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: .22em; }
+  .amb-seg { display: flex; flex: 1; gap: 4px; }
+  .amb-btn {
+    flex: 1; cursor: pointer; font-family: inherit; font-size: 11.5px; letter-spacing: .05em;
+    color: rgba(255,255,255,.72); background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 5px 0;
+    transition: background .25s ease, color .25s ease;
+  }
+  .amb-btn:hover { background: rgba(255,255,255,.16); }
+  .amb-btn.on {
+    color: #fff; background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+    border-color: transparent; text-shadow: 0 1px 2px rgba(90,40,50,.3);
+  }
+  .amb-status {
+    margin-top: 10px; font-size: 11px; color: rgba(255,255,255,.5);
+    letter-spacing: .14em; text-align: center; font-variant-numeric: tabular-nums;
   }
 
   /* ── 开场：信封 ─────────────────────────── */
@@ -934,12 +1047,14 @@
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    #seasonFx { display: none !important; }
   }
 </style>
 </head>
 <body>
 
-<div id="sky"><div class="moon"></div></div>
+<div id="sky"><div class="moon" id="moonEl"></div><div class="sun" id="sunEl"></div></div>
+<div id="seasonFx" aria-hidden="true"></div>
 
 <!-- 开场：雨霖之家 -->
 <div id="intro">
@@ -1300,6 +1415,29 @@
   <a class="cross-chip" href="#/daily">📖 回日常连载看看</a>
 </section>
 
+<!-- 天色面板（点天空里的月亮/太阳呼出；选「自动」跟随真实时间） -->
+<div id="ambPanel" role="dialog" aria-label="天色与季节" aria-hidden="true">
+  <div class="amb-row"><span class="amb-label">时段</span>
+    <div class="amb-seg" id="ambPhaseSeg">
+      <button class="amb-btn" data-phase="auto">自动</button>
+      <button class="amb-btn" data-phase="dawn">晨</button>
+      <button class="amb-btn" data-phase="day">昼</button>
+      <button class="amb-btn" data-phase="dusk">暮</button>
+      <button class="amb-btn" data-phase="night">夜</button>
+    </div>
+  </div>
+  <div class="amb-row"><span class="amb-label">季节</span>
+    <div class="amb-seg" id="ambSeasonSeg">
+      <button class="amb-btn" data-season="auto">自动</button>
+      <button class="amb-btn" data-season="spring">春</button>
+      <button class="amb-btn" data-season="summer">夏</button>
+      <button class="amb-btn" data-season="autumn">秋</button>
+      <button class="amb-btn" data-season="winter">冬</button>
+    </div>
+  </div>
+  <p class="amb-status" id="ambStatus"></p>
+</div>
+
 <button class="music" id="musicBtn" aria-label="音乐开关">
   <svg class="ic-on" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/></svg>
   <svg class="ic-off" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><line x1="3.5" y1="20.5" x2="20.5" y2="3.5"/></svg>
@@ -1367,6 +1505,7 @@
     sky.appendChild(frag);
   })();
   function shooting() {
+    if (document.body.getAttribute('data-phase') === 'day') return; /* 白天天亮，不见流星 */
     var s = document.createElement('div');
     s.className = 'shooting';
     s.style.left = (52 + Math.random() * 40) + '%';
@@ -1376,6 +1515,280 @@
   }
   setTimeout(function () { shooting(); }, 2600);
   setInterval(function () { if (Math.random() < .7) shooting(); }, 7000);
+
+  /* ── 天色引擎：日夜 × 四季（点天空里的月亮/太阳呼出面板）── */
+  var AMB_KEY = 'yulin_ambience';
+  var fxLayer = document.getElementById('seasonFx');
+  var skyMoon = document.getElementById('moonEl');
+  var skySun = document.getElementById('sunEl');
+  var ambPanel = document.getElementById('ambPanel');
+  var ambPhaseSeg = document.getElementById('ambPhaseSeg');
+  var ambSeasonSeg = document.getElementById('ambSeasonSeg');
+  var ambStatus = document.getElementById('ambStatus');
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  var PHASE_NAME = { dawn: '清晨', day: '白昼', dusk: '黄昏', night: '夜晚' };
+  var SEASON_NAME = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
+
+  /* 4 季 × 4 时段的天空色板 [顶, 上中, 下中, 底]；spring/night 就是站点原版夜空 */
+  var SKY = {
+    spring: {
+      dawn:  ['#45426b', '#77618c', '#b58a95', '#d0a094'],
+      day:   ['#4a7ea6', '#5e93b4', '#6fa2c0', '#7fadc4'],
+      dusk:  ['#4a3d6e', '#7c5a82', '#c07f78', '#d99a80'],
+      night: ['#1f2040', '#35345f', '#5c4d78', '#97718a']
+    },
+    summer: {
+      dawn:  ['#3e5378', '#5c7d9e', '#a3b0ae', '#dcb08c'],
+      day:   ['#3d76ad', '#4f8cbe', '#5c9ec9', '#6aa8cc'],
+      dusk:  ['#43396b', '#6e4f7e', '#b56f72', '#cf8a74'],
+      night: ['#1a2142', '#2b3a62', '#4a5580', '#8a86a0']
+    },
+    autumn: {
+      dawn:  ['#4a4266', '#7a5f7e', '#bd8f6e', '#d9ab7e'],
+      day:   ['#4d789a', '#618ca6', '#79a0ac', '#8dadab'],
+      dusk:  ['#453a62', '#77506e', '#b8705e', '#cf8a60'],
+      night: ['#221f42', '#37325e', '#5e4a72', '#9a7484']
+    },
+    winter: {
+      dawn:  ['#414663', '#6d7392', '#a08e9a', '#c9a492'],
+      day:   ['#5d7d99', '#6f8fa8', '#849cb0', '#97aebd'],
+      dusk:  ['#3e3a60', '#665379', '#9d7a86', '#b98d80'],
+      night: ['#1c2038', '#2e3354', '#4c4a70', '#8a7f96']
+    }
+  };
+
+  /* 各季日出日落（小时，装饰用近似值）：夏天昼长夜短，冬天相反 */
+  var SUN = { spring: [6.1, 18.4], summer: [5.3, 19.2], autumn: [6.2, 18.1], winter: [7.0, 17.5] };
+
+  var amb = { phase: 'auto', season: 'auto' };
+  try {
+    var savedAmb = JSON.parse(localStorage.getItem(AMB_KEY));
+    var PHASES = ['auto', 'dawn', 'day', 'dusk', 'night'];
+    var SEASONS = ['auto', 'spring', 'summer', 'autumn', 'winter'];
+    if (savedAmb && PHASES.indexOf(savedAmb.phase) >= 0 && SEASONS.indexOf(savedAmb.season) >= 0) amb = savedAmb;
+  } catch (err) {}
+
+  function computeSky(now, seasonForce) {
+    var m = now.getMonth() + 1;
+    var season = seasonForce || ((m >= 3 && m <= 5) ? 'spring' : (m >= 6 && m <= 8) ? 'summer' : (m >= 9 && m <= 11) ? 'autumn' : 'winter');
+    var h = now.getHours() + now.getMinutes() / 60;
+    var sr = SUN[season][0], ss = SUN[season][1];
+    var phase, nightProg = null;
+    var dayProg = (h - sr) / (ss - sr);
+    if (h >= sr - 0.9 && h < sr + 0.8) phase = 'dawn';
+    else if (h >= sr + 0.8 && h < ss - 0.8) phase = 'day';
+    else if (h >= ss - 0.8 && h < ss + 0.9) phase = 'dusk';
+    else {
+      phase = 'night';
+      var nightLen = 24 - (ss + 0.9) + (sr - 0.9);
+      nightProg = (h >= ss + 0.9 ? h - (ss + 0.9) : h + 24 - (ss + 0.9)) / nightLen;
+    }
+    return { season: season, phase: phase, dayProg: dayProg, nightProg: nightProg };
+  }
+
+  function currentAmbience() {
+    var real = computeSky(new Date());
+    var season = amb.season === 'auto' ? real.season : amb.season;
+    /* 季节被手动固定时，时段按所显示季节的日出日落重新判定（冬天选夏天，晚上 7 点还是黄昏） */
+    var eff = season === real.season && amb.phase === 'auto' ? real : computeSky(new Date(), season);
+    var a = {
+      season: season,
+      phase: amb.phase === 'auto' ? eff.phase : amb.phase,
+      dayProg: eff.dayProg,
+      nightProg: eff.nightProg
+    };
+    if (amb.phase !== 'auto' && amb.phase !== real.phase) {
+      /* 手动指到一个与现在不同的时段：太阳摆在那个时段该在的高度（晨低垂/正午高/暮西沉） */
+      a.dayProg = a.phase === 'dawn' ? 0.22 : a.phase === 'dusk' ? 0.74 : a.phase === 'day' ? 0.5 : real.dayProg;
+      a.nightProg = a.phase === 'night' ? 0.5 : null;
+    }
+    return a;
+  }
+
+  function hex2rgb(hx) {
+    hx = String(hx).replace('#', '');
+    if (hx.length !== 6) hx = '1f2040';
+    return [parseInt(hx.slice(0, 2), 16), parseInt(hx.slice(2, 4), 16), parseInt(hx.slice(4, 6), 16)];
+  }
+  function rgbStr(c) { return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')'; }
+
+  var curSky = null, skyRaf = null;
+  function writeSky(cols) {
+    var st = document.body.style;
+    st.setProperty('--night1', rgbStr(cols[0]));
+    st.setProperty('--night2', rgbStr(cols[1]));
+    st.setProperty('--night3', rgbStr(cols[2]));
+    st.setProperty('--night4', rgbStr(cols[3]));
+    if (themeMeta) themeMeta.setAttribute('content', rgbStr(cols[0]));
+  }
+  function applySky(pal, animate) {
+    var target = pal.map(hex2rgb);
+    if (!curSky || !animate) { curSky = target; writeSky(target); return; }
+    if (skyRaf) cancelAnimationFrame(skyRaf);
+    var from = curSky.map(function (c) { return c.slice(); });
+    var t0 = null, done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      curSky = target;
+      writeSky(target);
+    }
+    function step(ts) {
+      if (done) return;
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 1600);
+      p = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      var mix = target.map(function (t, i) {
+        var f = from[i];
+        return [f[0] + (t[0] - f[0]) * p, f[1] + (t[1] - f[1]) * p, f[2] + (t[2] - f[2]) * p];
+      });
+      curSky = mix;
+      writeSky(mix);
+      if (p < 1) skyRaf = requestAnimationFrame(step);
+      else finish();
+    }
+    skyRaf = requestAnimationFrame(step);
+    /* 后台标签页 rAF 会被节流，1.9 秒后兜底直接落到目标色 */
+    setTimeout(finish, 1900);
+  }
+
+  /* 日月沿弧线走：prog 0=东地平线, 0.5=天顶, 1=西地平线（以圆心定位） */
+  function placeCel(el, prog) {
+    if (prog !== null && prog > -0.02 && prog < 1.02) {
+      var half = el === skySun ? 28 : 31;
+      el.style.right = 'auto';
+      el.style.left = 'calc(' + (8 + Math.min(1, Math.max(0, prog)) * 84).toFixed(1) + '% - ' + half + 'px)';
+      el.style.top = 'calc(' + (66 - Math.sin(Math.min(1, Math.max(0, prog)) * Math.PI) * 54).toFixed(1) + '% - ' + half + 'px)';
+      el.classList.add('up');
+    } else {
+      el.classList.remove('up');
+    }
+  }
+
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function spawnFx(cls, n, dress) {
+    for (var i = 0; i < n; i++) {
+      var s = document.createElement('i');
+      s.className = cls;
+      dress(s);
+      fxLayer.appendChild(s);
+    }
+  }
+  function buildFx(season, phase) {
+    fxLayer.innerHTML = '';
+    if (season === 'spring') {
+      spawnFx('petal', 14, function (s) {
+        s.style.left = rnd(0, 100) + '%';
+        s.style.setProperty('--sz', rnd(9, 14).toFixed(1) + 'px');
+        s.style.setProperty('--fd', rnd(9, 15).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 15)).toFixed(1) + 's');
+        s.style.setProperty('--sw', rnd(20, 42).toFixed(0) + 'px');
+        s.style.setProperty('--spin', rnd(300, 460).toFixed(0) + 'deg');
+      });
+    } else if (season === 'summer') {
+      if (phase === 'dusk' || phase === 'night') {
+        spawnFx('firefly', 9, function (s) {
+          s.style.left = rnd(4, 94) + '%';
+          s.style.top = rnd(16, 84) + '%';
+          s.style.setProperty('--fd', rnd(3.6, 6.4).toFixed(1) + 's');
+          s.style.setProperty('--fd2', rnd(10, 17).toFixed(1) + 's');
+          s.style.setProperty('--fdel', (-rnd(0, 6)).toFixed(1) + 's');
+          s.style.setProperty('--dx', rnd(-70, 70).toFixed(0) + 'px');
+          s.style.setProperty('--dy', rnd(-80, 40).toFixed(0) + 'px');
+        });
+      }
+    } else if (season === 'autumn') {
+      var lcs = [['#e2a35c', '#c47a3e'], ['#d98e4a', '#b5602f'], ['#c9a35c', '#a5793a']];
+      spawnFx('leaf', 12, function (s) {
+        var lc = lcs[Math.floor(Math.random() * lcs.length)];
+        s.style.left = rnd(0, 100) + '%';
+        s.style.setProperty('--sz', rnd(11, 16).toFixed(1) + 'px');
+        s.style.setProperty('--lc1', lc[0]);
+        s.style.setProperty('--lc2', lc[1]);
+        s.style.setProperty('--fd', rnd(8, 14).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 14)).toFixed(1) + 's');
+        s.style.setProperty('--sw', rnd(30, 62).toFixed(0) + 'px');
+        s.style.setProperty('--spin', rnd(460, 760).toFixed(0) + 'deg');
+      });
+    } else if (season === 'winter') {
+      spawnFx('snow', 26, function (s) {
+        s.style.left = rnd(0, 100) + '%';
+        s.style.setProperty('--sz', rnd(3, 6.5).toFixed(1) + 'px');
+        s.style.setProperty('--fd', rnd(9, 17).toFixed(1) + 's');
+        s.style.setProperty('--fdel', (-rnd(0, 17)).toFixed(1) + 's');
+        s.style.setProperty('--drift', rnd(-30, 30).toFixed(0) + 'px');
+      });
+    }
+  }
+
+  function saveAmb() { try { localStorage.setItem(AMB_KEY, JSON.stringify(amb)); } catch (err) {} }
+  function syncPanelUI() {
+    var marks = [[ambPhaseSeg, 'phase', amb.phase], [ambSeasonSeg, 'season', amb.season]];
+    marks.forEach(function (m) {
+      if (!m[0]) return;
+      Array.prototype.forEach.call(m[0].querySelectorAll('.amb-btn'), function (b) {
+        b.classList.toggle('on', b.dataset[m[1]] === m[2]);
+      });
+    });
+  }
+  function syncStatus(a) {
+    if (!ambStatus) return;
+    var src = (amb.phase === 'auto' && amb.season === 'auto') ? '自动跟随' : '手动固定';
+    ambStatus.textContent = src + ' · ' + SEASON_NAME[a.season] + '季 · ' + PHASE_NAME[a.phase];
+  }
+
+  var lastKey = '';
+  var PHASE_AMBIENT = { dawn: ['0.3', '0.7'], day: ['0', '0.35'], dusk: ['0.5', '0.7'], night: ['1', '1'] };
+  function renderAmbience(animate) {
+    var a = currentAmbience();
+    document.body.setAttribute('data-phase', a.phase);
+    document.body.setAttribute('data-season', a.season);
+    /* 星星/暗角即时落值（JS 直写，不依赖 CSS 过渡） */
+    var ambO = PHASE_AMBIENT[a.phase];
+    document.body.style.setProperty('--star-o', ambO[0]);
+    document.body.style.setProperty('--vig-o', ambO[1]);
+    var key = a.season + ' ' + a.phase;
+    if (key !== lastKey) {
+      applySky(SKY[a.season][a.phase], animate);
+      buildFx(a.season, a.phase);
+      lastKey = key;
+    }
+    if (a.phase === 'night') { placeCel(skyMoon, a.nightProg); skySun.classList.remove('up'); }
+    else { placeCel(skySun, a.dayProg); skyMoon.classList.remove('up'); }
+    syncStatus(a);
+  }
+
+  function openAmbPanel() { ambPanel.classList.add('on'); ambPanel.setAttribute('aria-hidden', 'false'); syncPanelUI(); }
+  function closeAmbPanel() { ambPanel.classList.remove('on'); ambPanel.setAttribute('aria-hidden', 'true'); }
+  function toggleAmbPanel() {
+    if (ambPanel.classList.contains('on')) closeAmbPanel(); else openAmbPanel();
+  }
+  function sunWink() {
+    skySun.classList.remove('wink');
+    void skySun.offsetWidth;
+    skySun.classList.add('wink');
+  }
+  if (ambPanel) {
+    ambPanel.addEventListener('click', function (e) {
+      var b = e.target.closest('.amb-btn');
+      if (!b) return;
+      if (b.dataset.phase) amb.phase = b.dataset.phase;
+      if (b.dataset.season) amb.season = b.dataset.season;
+      saveAmb();
+      renderAmbience(true);
+      syncPanelUI();
+    });
+  }
+
+  (function initAmbience() {
+    var cs = getComputedStyle(document.body);
+    curSky = ['--night1', '--night2', '--night3', '--night4'].map(function (v) {
+      return hex2rgb(cs.getPropertyValue(v).trim());
+    });
+    /* 首次直接落色（rAF 在后台标签页会被节流，不能靠它做首次上色） */
+    renderAmbience(false);
+    setInterval(function () { renderAmbience(document.visibilityState === 'visible'); }, 30000);
+  })();
 
   /* ── 音乐：温柔版卡农（D 大调，慢速音乐盒） ── */
   var actx = null, master = null, playing = false, loopTimer = null;
@@ -1516,15 +1929,19 @@
     } catch (err) {}
   }
   document.addEventListener('pointerdown', function (e) {
-    if (e.target.closest('button, a, .door, .ticket, .fortune')) return;
-    if (moonEl) {
-      var mr = moonEl.getBoundingClientRect();
-      if (mr.width && e.clientX >= mr.left && e.clientX <= mr.right && e.clientY >= mr.top && e.clientY <= mr.bottom) {
-        var pr = document.querySelector('.paper').getBoundingClientRect();
-        var mcx = mr.left + mr.width / 2, mcy = mr.top + mr.height / 2;
-        if (!(mcx > pr.left && mcx < pr.right && mcy > pr.top && mcy < pr.bottom)) { moonWink(); return; }
-      }
+    if (e.target && e.target.closest && e.target.closest('button, a, .door, .ticket, .fortune')) return;
+    var pr = document.querySelector('.paper').getBoundingClientRect();
+    function hitCel(el) { /* 点中升起的日/月（被信纸盖住时不算） */
+      if (!el || !el.classList.contains('up')) return false;
+      var r = el.getBoundingClientRect();
+      if (!r.width) return false;
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return false;
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      return !(cx > pr.left && cx < pr.right && cy > pr.top && cy < pr.bottom);
     }
+    if (hitCel(moonEl)) { moonWink(); toggleAmbPanel(); return; }
+    if (hitCel(skySun)) { sunWink(); toggleAmbPanel(); return; }
+    if (ambPanel.classList.contains('on') && !e.target.closest('#ambPanel')) closeAmbPanel();
     spawnHeart(e.clientX, e.clientY, false);
   });
 
