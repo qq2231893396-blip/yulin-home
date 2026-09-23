@@ -844,7 +844,9 @@
   .lrec b { font-weight: normal; color: var(--rose-deep); }
 
   /* ── 票根墙 ─────────────────────────── */
-  .stubwall { display: flex; flex-direction: column; gap: 10px; }
+  .stubwall { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding: 2px; scrollbar-width: thin; scrollbar-color: rgba(255,250,241,.25) transparent; }
+  .stubwall::-webkit-scrollbar { width: 5px; }
+  .stubwall::-webkit-scrollbar-thumb { background: rgba(255,250,241,.22); border-radius: 999px; }
   .stub {
     display: flex; align-items: center; gap: 12px;
     background: rgba(255,250,241,.1); border: 1px dashed rgba(255,250,241,.3);
@@ -942,6 +944,59 @@
   }
   .tk-rules { margin-top: 32px; text-align: center; color: rgba(255,255,255,.58); font-size: 12.5px; line-height: 2.2; letter-spacing: .08em; }
   .tk-rules b { font-weight: normal; color: rgba(255,255,255,.82); letter-spacing: .2em; }
+  .tk-toolbar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .tk-chip {
+    appearance: none; -webkit-appearance: none;
+    border: 1.5px dashed rgba(255,250,241,.4); background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.85); font: inherit; font-size: 13px; letter-spacing: .1em;
+    border-radius: 999px; padding: 8px 16px; min-height: 34px; cursor: pointer;
+    transition: transform .15s ease, background .2s ease;
+    -webkit-user-select: none; user-select: none;
+  }
+  .tk-chip:active { transform: scale(.96); background: rgba(255,255,255,.14); }
+  .tk-sync { margin-top: 10px; text-align: center; font-size: 11.5px; color: rgba(255,255,255,.45); letter-spacing: .1em; min-height: 1.4em; }
+  .tk-ops { display: flex; gap: 8px; margin-top: 6px; }
+  .tk-btn {
+    appearance: none; -webkit-appearance: none;
+    border: 1.5px solid rgba(201,138,138,.45); background: rgba(201,138,138,.08);
+    color: #a86a6a; font: inherit; font-size: 12.5px; letter-spacing: .08em;
+    border-radius: 999px; padding: 5px 14px; min-height: 28px; cursor: pointer;
+    transition: transform .12s ease, opacity .2s ease, background .15s ease, box-shadow .15s ease;
+    -webkit-user-select: none; user-select: none;
+  }
+  .tk-btn:active { transform: scale(.93); background: rgba(201,138,138,.22); box-shadow: inset 0 1.5px 4px rgba(120,60,60,.18); }
+  .tk-btn:disabled { opacity: .4; cursor: default; }
+  .tk-btn.tk-del { border-color: rgba(138,122,109,.4); color: rgba(138,122,109,.85); background: none; }
+  .tk-btn.tk-del:active { background: rgba(138,122,109,.14); box-shadow: inset 0 1.5px 4px rgba(90,80,66,.18); }
+  .tk-count { display: inline-block; }
+  .tk-count.bump { animation: tkBump .38s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes tkBump {
+    0% { transform: scale(1); } 40% { transform: scale(1.35); color: var(--rose-deep); }
+    100% { transform: scale(1); }
+  }
+  .tkf-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+  .tkf-row { display: flex; align-items: center; gap: 10px; }
+  .tkf-label { flex: 0 0 4.5em; font-size: 13px; color: var(--ink-soft); letter-spacing: .1em; }
+  .tkf-row input, .tkf-row textarea {
+    flex: 1; font: inherit; font-size: 14px; color: var(--ink);
+    border: 1.5px solid rgba(201,138,138,.35); border-radius: 10px;
+    padding: 8px 10px; background: rgba(255,250,241,.7); outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .tkf-row input:focus, .tkf-row textarea:focus {
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(201,138,138,.16);
+  }
+  .tkf-row textarea { resize: none; }
+  .tkf-seg { display: flex; gap: 8px; flex: 1; }
+  .tkf-seg button {
+    flex: 1; appearance: none; font: inherit; font-size: 13px; letter-spacing: .1em;
+    border: 1.5px solid rgba(201,138,138,.4); background: none; color: var(--ink-soft);
+    border-radius: 10px; padding: 7px 0; cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+  }
+  .tkf-seg button.on { background: var(--rose); border-color: var(--rose); color: #fff; }
+  .tkf-warn { min-height: 1.2em; font-size: 12px; color: #b96a6a; text-align: center; }
 
   /* ── 月亮小屋（补记与改错）─────────────────────────── */
   .moon-recs { display: flex; flex-direction: column; gap: 10px; }
@@ -1547,14 +1602,44 @@
     <div class="pocket-head"><span class="pocket-name">票根墙</span><span class="pocket-line"></span><span class="pocket-count" id="tkLogCount"></span></div>
     <div class="stubwall" id="stubWall"></div>
   </div>
+  <div class="tk-toolbar">
+    <button class="tk-chip" id="tkPrintBtn">🖨️ 印一张新券</button>
+    <button class="tk-chip" id="tkSyncBtn">☁ 票亭 · 对暗号</button>
+  </div>
+  <p class="tk-sync" id="tkSyncLine"></p>
   <p class="tk-rules">
     <b>兑券须知</b><br>
     一、出示本券，即视为正式发起一次浪漫行为<br>
     二、每张券限用一次，用完作废，不找零、不转赠<br>
-    三、用掉的券、想要的新券，告诉小汤一声，票亭马上印
+    三、想要什么新券，不用告诉小汤——票亭自己就能印
   </p>
   <a class="cross-chip" href="#/daily">📖 回日常连载看看</a>
 </section>
+
+<!-- 票亭 · 印新券弹层 -->
+<div class="sheet-mask" id="tkFormMask" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <p class="sheet-title">印一张新券</p>
+    <p class="sheet-sub">印好放进票夹，对过暗号的手机马上能看到</p>
+    <div class="tkf-grid">
+      <div class="tkf-row"><span class="tkf-label">放进</span>
+        <div class="tkf-seg">
+          <button type="button" id="tkfOwnerY" class="on">雨含的票夹</button>
+          <button type="button" id="tkfOwnerT">汤的票夹</button>
+        </div>
+      </div>
+      <div class="tkf-row"><span class="tkf-label">券名</span><input id="tkfName" maxlength="30" placeholder="比如：一起看日出券"></div>
+      <div class="tkf-row"><span class="tkf-label">图标</span><input id="tkfIcon" maxlength="8" placeholder="🎟️"></div>
+      <div class="tkf-row"><span class="tkf-label">印几张</span><input id="tkfCount" type="number" min="1" max="99" value="1"></div>
+      <div class="tkf-row"><span class="tkf-label">券面说明</span><textarea id="tkfNote" rows="2" maxlength="120" placeholder="怎么兑现，写清楚（可以空着）"></textarea></div>
+    </div>
+    <p class="tkf-warn" id="tkfWarn"></p>
+    <div class="sheet-btns">
+      <button class="btn btn-sheet-no" id="tkfNo">先不印</button>
+      <button class="btn btn-sheet-yes" id="tkfYes">印 好</button>
+    </div>
+  </div>
+</div>
 
 <!-- 天色面板（点天空里的月亮/太阳呼出；选「自动」跟随真实时间） -->
 <div id="ambPanel" role="dialog" aria-label="天色与季节" aria-hidden="true">
@@ -2572,10 +2657,11 @@
         { date: '年-月-日', mood: '一个emoji', title: '小标题', text: '正文',
           photo: 'photos/文件.jpg', cap: '照片说明' }   ← photo/cap 可选；
           照片放进 letter-for-yuhan/photos/ 文件夹会一起发布（公开可访问）
-     2) 爱心票亭：count 直接改数量；新券照格式加一行
+     2) 爱心票亭：TICKET_SEED 只是「初始券种目录」——张数平时不用改代码：
+        页面票亭里直接「用一张 / +1 / 印新券」，两台手机自动同步；
+        这里只管(a)给新设备播种初始券种、(b)要改某张券的文案/图标时改这里
         { owner: 't' 汤的票夹 / 'y' 雨含的票夹, icon: 'emoji', name, count, note }
-     3) 票根墙：用掉一张券，往 TICKET_LOG 最上面加一条销账记录
-        { date: '年-月-日', text: '用掉了什么券，一句话' }
+     3) 票根墙：不用手动记——用券/印券自动销账，两边同步
      4) 情话签：QUOTES 随便加，一人一句往下排
      5) 月亮小屋（生理期记录）：不用预填数据，她自己点大按钮记；
         记录存在她手机浏览器的 localStorage，正常天数阈值见下方「月亮小屋」段
@@ -2586,7 +2672,7 @@
     { date: '2026-09-17', mood: '✨', title: '第二章，开张',
       text: '从今天起，这个小站多了一块「日常连载」：以后我们的大小事，都记在这一页一页里。开篇第一笔，先记下连载开工、票亭开张——往后的鸡毛蒜皮，请雨含小宝多多捧场。' }
   ];
-  var TICKETS = [
+  var TICKET_SEED = [
     { owner: 't', icon: '💆', name: '雨含牌 · 按摩券', count: 3,
       note: '小汤持券，雨含兑现：肩颈按摩一次，约 30 分钟，力度五星好评。' },
     { owner: 't', icon: '🥤', name: '喝水扒开不生气券', count: 1,
@@ -2595,9 +2681,6 @@
       note: '雨含持券，小汤兑现：肩颈按摩一次，约 30 分钟，随叫随到不加价。' },
     { owner: 'y', icon: '✨', name: '空白许愿券', count: 1,
       note: '券面故意留白：兑现时当场写下一个愿望，写什么算什么，小汤无理由照办。' }
-  ];
-  var TICKET_LOG = [
-    // 示例：{ date: '2026-09-20', text: '雨含用掉「小汤牌 · 按摩券」一张，评价：手艺不错' }
   ];
   var QUOTES = [
     '今天也很喜欢你，比昨天多一点点。',
@@ -2655,8 +2738,110 @@
     return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate())
          + ' · 周' + '日一二三四五六'.charAt(d.getDay());
   }
+  /* ── 爱心票亭 · 会自己记账的票夹 ──────────────
+     张数不再写死在代码里：本机 localStorage 记账 + 云端同步（月亮小屋同款）。
+     · 两台手机对过暗号就是同一本票夹（暗号与月亮小屋共用同一个）
+     · 同一张券两头都动过 → 取改得晚的那次；删券走墓碑，同名重印会复活
+     · 云暂时够不着（函数没上线/断网）→ 先记本机，能连上时自动补
+     · TICKET_SEED 只是新设备的初始券种目录，开张之后的张数以账本为准 */
+  var TK_KEY = 'yulin_tickets_v1';
+  var TK_LOG_KEY = 'yulin_ticketlog_v1';
+  var TK_DEL_KEY = 'yulin_tickets_del_v1';
+  var tkState = [];  /* 券：{owner:'t'|'y', icon, name, count, note, t}  t=最后改动毫秒 */
+  var tkLog = [];    /* 票根墙：{id, icon, name, act:'use'|'add', t} */
+  var tkTomb = {};   /* 删除墓碑：'owner|name' -> 删除时间 */
+  var tkPrev = {};   /* 上一次看到的本机票夹，用来发现「刚刚动了什么」 */
+  var tkTimer = null;
+  function tkKey(o, n) { return o + '|' + n; }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function loadTkMeta() {
+    try { tkTomb = JSON.parse(lsGet(TK_DEL_KEY) || '{}') || {}; } catch (err) { tkTomb = {}; }
+  }
+  function saveTkMeta() { lsSet(TK_DEL_KEY, JSON.stringify(tkTomb)); }
+  /* 装载本机票夹：首次按 TICKET_SEED 播种；种子目录里新增的券种自动补上；撕过的（墓碑在）不复活 */
+  function loadTkData() {
+    var own = [];
+    try {
+      var raw = JSON.parse(lsGet(TK_KEY) || '[]');
+      if (Array.isArray(raw)) own = raw;
+    } catch (err) { own = []; }
+    var have = {};
+    own.forEach(function (t) { if (t && t.name) have[tkKey(t.owner, t.name)] = t; });
+    TICKET_SEED.forEach(function (s) {
+      var k = tkKey(s.owner, s.name);
+      if (!have[k] && !(k in tkTomb)) {
+        var t = { owner: s.owner, icon: s.icon, name: s.name, count: s.count, note: s.note || '', t: 0 };
+        own.push(t); have[k] = t;
+      }
+    });
+    tkState = own.filter(function (t) {
+      return t && (t.owner === 't' || t.owner === 'y') && t.name &&
+             typeof t.count === 'number' && !(tkKey(t.owner, t.name) in tkTomb);
+    });
+    tkState.forEach(function (t) {
+      if (typeof t.t !== 'number') t.t = 0;
+      if (typeof t.note !== 'string') t.note = '';
+      if (!t.icon) t.icon = '🎟️';
+      if (t.count < 0) t.count = 0;
+      if (t.count > 999) t.count = 999;
+    });
+    try {
+      var lg = JSON.parse(lsGet(TK_LOG_KEY) || '[]');
+      tkLog = Array.isArray(lg) ? lg.filter(function (l) { return l && l.id && l.name; }) : [];
+    } catch (err) { tkLog = []; }
+    tkLog.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    if (tkLog.length > 500) tkLog = tkLog.slice(0, 500);
+  }
+  function saveTkLocal() {
+    try {
+      lsSet(TK_KEY, JSON.stringify(tkState));
+      lsSet(TK_LOG_KEY, JSON.stringify(tkLog));
+    } catch (err) {}
+    renderTickets();
+    renderStubs();
+  }
+  function snapTk() {
+    var m = {};
+    tkState.forEach(function (t) {
+      m[tkKey(t.owner, t.name)] = t.owner + t.name + t.icon + t.count + t.note;
+    });
+    return m;
+  }
+  /* 本机票夹一动（用/印/撕/印新券），这里发现并安排推送 */
+  function tkLocalChanged() {
+    tkPrev = snapTk();
+    saveTkMeta();
+    if (moonPass) {
+      clearTimeout(tkTimer);
+      tkTimer = setTimeout(function () { tkSync(); }, 1200);
+    } else {
+      renderTkSync();
+    }
+  }
+  function tkTouch(t) { t.t = Date.now(); }
+  function tkLogPush(icon, name, act) {
+    var entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      icon: icon || '🎫', name: name, act: act, t: Date.now()
+    };
+    tkLog.unshift(entry);
+    tkLog.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    if (tkLog.length > 500) tkLog = tkLog.slice(0, 500);
+    return entry;
+  }
+  /* 同步替换可能换掉数组元素，交互一律按 key 现查最新那条，不抱旧引用 */
+  function tkLive(t) {
+    for (var i = 0; i < tkState.length; i++) {
+      if (tkKey(tkState[i].owner, tkState[i].name) === tkKey(t.owner, t.name)) return tkState[i];
+    }
+    return null;
+  }
   function ticketTotal() {
-    return TICKETS.reduce(function (s, t) { return s + Math.max(0, t.count || 0); }, 0);
+    return tkState.reduce(function (s, t) { return s + Math.max(0, t.count || 0); }, 0);
   }
 
   function renderJournal() {
@@ -2709,18 +2894,40 @@
     } catch (err) {}
   }
 
+  /* 余数数字弹一下（重渲染后按 owner+券名定位新卡） */
+  function bumpCount(owner, name) {
+    var boxes = document.querySelectorAll('#tk-' + owner + ' .ticket');
+    for (var i = 0; i < boxes.length; i++) {
+      var nm = boxes[i].querySelector('.tk-name');
+      if (nm && nm.textContent === name) {
+        var c = boxes[i].querySelector('.tk-count');
+        if (!c) return;
+        c.classList.remove('bump');
+        void c.offsetWidth;
+        c.classList.add('bump');
+        return;
+      }
+    }
+  }
+
   function ticketCard(t, i) {
     var el = document.createElement('div');
     el.className = 'ticket' + (t.count <= 0 ? ' used' : '');
     el.innerHTML =
-      '<div class="tk-stub"><span class="tk-icon">' + t.icon + '</span>'
+      '<div class="tk-stub"><span class="tk-icon">' + esc(t.icon) + '</span>'
       + '<span class="tk-no">NO.' + pad2(i + 1) + '</span></div>'
-      + '<div class="tk-body"><p class="tk-name">' + t.name + '</p>'
-      + '<p class="tk-note">' + t.note + '</p>'
+      + '<div class="tk-body"><p class="tk-name">' + esc(t.name) + '</p>'
+      + (t.note ? '<p class="tk-note">' + esc(t.note) + '</p>' : '')
       + '<div class="tk-meta"><span class="tk-count">余 ' + t.count + ' 张</span>'
-      + '<span class="tk-valid">长期有效 · 每张限用一次</span></div></div>'
+      + '<span class="tk-valid">长期有效 · 每张限用一次</span></div>'
+      + '<div class="tk-ops">'
+      + '<button class="tk-btn tk-use" aria-label="用掉一张"' + (t.count <= 0 ? ' disabled' : '') + '>用一张</button>'
+      + '<button class="tk-btn tk-add" aria-label="加印一张">＋1</button>'
+      + '<button class="tk-btn tk-del" aria-label="撕掉这张券">撕掉</button>'
+      + '</div></div>'
       + (t.count <= 0 ? '<span class="tk-stamp">已兑完</span>' : '');
     el.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.tk-btn')) return; /* 按钮上不抖整张卡 */
       el.classList.remove('wiggle');
       void el.offsetWidth;
       el.classList.add('wiggle');
@@ -2728,31 +2935,92 @@
       popSound();
       spawnHeart(e.clientX, e.clientY, false);
     });
+    el.querySelector('.tk-use').addEventListener('click', function () {
+      var live = tkLive(t);
+      if (!live || live.count <= 0) return;
+      var r = el.getBoundingClientRect();
+      live.count -= 1;
+      tkTouch(live);
+      var entry = tkLogPush(live.icon, live.name, 'use');
+      saveTkLocal();
+      tkLocalChanged();
+      popSound();
+      spawnHeart(r.left + 90, r.top + r.height / 2, true);
+      bumpCount(live.owner, live.name);
+      /* 即点即用 + 6 秒反悔：券是轻松道具，不弹确认框打断手感 */
+      showUndo('用掉了「' + live.name + '」', function () {
+        var back = tkLive(t);
+        if (!back) return;
+        back.count = Math.min(999, back.count + 1);
+        tkTouch(back);
+        tkLog = tkLog.filter(function (l) { return l.id !== entry.id; });
+        saveTkLocal();
+        tkLocalChanged();
+        popSound();
+        bumpCount(back.owner, back.name);
+      });
+    });
+    el.querySelector('.tk-add').addEventListener('click', function () {
+      var live = tkLive(t);
+      if (!live) return;
+      var r = el.getBoundingClientRect();
+      live.count = Math.min(999, live.count + 1);
+      tkTouch(live);
+      tkLogPush(live.icon, live.name, 'add');
+      saveTkLocal();
+      tkLocalChanged();
+      popSound();
+      spawnHeart(r.left + r.width - 60, r.top + r.height / 2, false);
+      bumpCount(live.owner, live.name);
+    });
+    el.querySelector('.tk-del').addEventListener('click', function () {
+      var live = tkLive(t);
+      if (!live) return;
+      openSheet({
+        title: '把「' + live.name + '」整版撕掉？',
+        sub: '这张券会从两边的票夹里一起消失，撕了还能重印同名的。',
+        yesText: '留着',
+        noText: '再想想',
+        onDel: function () {
+          tkState = tkState.filter(function (x) {
+            return tkKey(x.owner, x.name) !== tkKey(live.owner, live.name);
+          });
+          tkTomb[tkKey(live.owner, live.name)] = Date.now();
+          saveTkLocal();
+          tkLocalChanged();
+          closeSheet();
+        }
+      });
+    });
     return el;
   }
 
   function renderStubs() {
     var wall = $('#stubWall');
     wall.innerHTML = '';
-    $('#tkLogCount').textContent = TICKET_LOG.length ? '共 ' + TICKET_LOG.length + ' 张' : '虚位以待';
-    if (!TICKET_LOG.length) {
+    $('#tkLogCount').textContent = tkLog.length ? '共 ' + tkLog.length + ' 张' : '虚位以待';
+    if (!tkLog.length) {
       var e = document.createElement('div');
       e.className = 'stub-empty';
       e.innerHTML = '还没有销账记录。<br>第一张用掉的券，票根就贴在这里。';
       wall.appendChild(e);
       return;
     }
-    TICKET_LOG.forEach(function (it) {
+    tkLog.forEach(function (it) {
+      var d = new Date(it.t || 0);
+      var ds = isNaN(d.getTime()) ? '' : (d.getMonth() + 1) + '月' + d.getDate() + '日';
       var s = document.createElement('div');
       s.className = 'stub';
-      s.innerHTML = '<span class="st-ic">🎫</span><span class="st-date">' + (it.date || '') + '</span><span>' + it.text + '</span>';
+      s.innerHTML = '<span class="st-ic">' + esc(it.icon || '🎫') + '</span>'
+                  + '<span class="st-date">' + ds + '</span>'
+                  + '<span>' + (it.act === 'add' ? '加印' : '用掉') + '「' + esc(it.name) + '」</span>';
       wall.appendChild(s);
     });
   }
 
   function renderTickets() {
     ['t', 'y'].forEach(function (o) {
-      var list = TICKETS.filter(function (t) { return t.owner === o; });
+      var list = tkState.filter(function (t) { return t.owner === o; });
       var total = list.reduce(function (s, t) { return s + Math.max(0, t.count || 0); }, 0);
       $('#tkc-' + o).textContent = '共 ' + total + ' 张在架';
       var box = $('#tk-' + o);
@@ -3637,6 +3905,266 @@
   renderMoonSync();
   if (moonPass) moonSync();
 
+  /* ── 票亭 · 云上票夹（月亮小屋同款：整本存取 + 乐观并发 + 前端合并）──
+     API：love-you-yh-to-tl.netlify.app/.netlify/functions/tickets（store 独立命名空间）
+     口令与月亮小屋共用一个（同 localStorage key、同 MOON_PASS_HASH），
+     雨含只要对过一次暗号，票亭和月亮小屋就都通了 */
+  var TK_API = 'https://love-you-yh-to-tl.netlify.app/.netlify/functions/tickets';
+  try { TK_API = localStorage.getItem('yulin_tickets_api') || TK_API; } catch (err) {}
+  var tkSyncState = 'off'; /* off | busy | ok | offline | badpass */
+  var tkSyncedAt = '';
+  var tkRunning = false;
+  var tkAgain = false;
+  var tkSyncLine = $('#tkSyncLine'), tkSyncBtn = $('#tkSyncBtn'), tkPrintBtn = $('#tkPrintBtn');
+
+  function canonTkList(l, keyf) {
+    return JSON.stringify(l.slice().sort(function (a, b) { return keyf(a) < keyf(b) ? -1 : 1; }));
+  }
+  function tkSameAsCloud(doc, tickets, deleted, log) {
+    var ct = (doc && Array.isArray(doc.tickets)) ? doc.tickets : [];
+    var cx = (doc && Array.isArray(doc.deleted)) ? doc.deleted : [];
+    var cl = (doc && Array.isArray(doc.log)) ? doc.log : [];
+    return canonTkList(tickets, function (x) { return x.owner + '|' + x.name; }) === canonTkList(ct, function (x) { return x.owner + '|' + x.name; })
+        && canonTkList(deleted, function (x) { return x.owner + '|' + x.name; }) === canonTkList(cx, function (x) { return x.owner + '|' + x.name; })
+        && canonTkList(log, function (x) { return x.id; }) === canonTkList(cl, function (x) { return x.id; });
+  }
+
+  /* 合并：云上的票夹 + 本机的票夹 → 一本谁都不缺的。返回待推送 {tickets, deleted, log} */
+  function mergeCloudIntoTk(doc) {
+    var cT = {}, cDel = {}, cLog = {}, k;
+    if (doc && Array.isArray(doc.tickets)) {
+      doc.tickets.forEach(function (r) { if (r && r.name) cT[tkKey(r.owner, r.name)] = r; });
+    }
+    if (doc && Array.isArray(doc.deleted)) {
+      doc.deleted.forEach(function (r) { if (r && r.name) cDel[tkKey(r.owner, r.name)] = typeof r.t === 'number' ? r.t : 0; });
+    }
+    if (doc && Array.isArray(doc.log)) {
+      doc.log.forEach(function (l) { if (l && l.id) cLog[l.id] = l; });
+    }
+    var tomb = {};
+    for (k in tkTomb) tomb[k] = tkTomb[k];
+    for (k in cDel) if (!(k in tomb) || cDel[k] > tomb[k]) tomb[k] = cDel[k];
+
+    var loc = {}, keys = {};
+    tkState.forEach(function (t) { loc[tkKey(t.owner, t.name)] = t; });
+    for (k in loc) keys[k] = true;
+    for (k in cT) keys[k] = true;
+
+    var map = {};
+    for (k in keys) {
+      var lp = loc[k], cp = cT[k], th = tomb[k];
+      if (th !== undefined) {
+        /* 有墓碑：谁的动作晚听谁的（撕了又重印同名券 → 复活） */
+        if (cp && (typeof cp.t === 'number' ? cp.t : 0) > th) {
+          delete tomb[k];
+        } else if (!cp && lp && (lp.t || 0) > th) {
+          delete tomb[k];
+        } else {
+          continue; /* 删除生效：本机有也收走 */
+        }
+      }
+      if (lp && cp) {
+        var lt = lp.t || 0, ct2 = cp.t || 0;
+        if (lt >= ct2) map[k] = lp;             /* 谁改得晚听谁的；打平听本机 */
+        else map[k] = cp;
+      } else if (lp) {
+        map[k] = lp;
+      } else {
+        /* 云上有、本机没有：补进来（云的形状已被服务端收紧过） */
+        map[k] = { owner: cp.owner, icon: cp.icon || '🎟️', name: cp.name, count: cp.count, note: cp.note || '', t: cp.t || 0 };
+      }
+    }
+    tkTomb = tomb;
+
+    var next = [];
+    for (k in map) next.push(map[k]);
+    tkState = next;
+
+    /* 票根墙：并集（按 id），新的在上，超 500 截断 */
+    var seenL = {};
+    tkLog.forEach(function (l) { seenL[l.id] = true; });
+    for (k in cLog) if (!seenL[k]) { tkLog.push(cLog[k]); seenL[k] = true; }
+    tkLog.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    if (tkLog.length > 500) tkLog = tkLog.slice(0, 500);
+
+    saveTkLocal();
+    tkPrev = snapTk();
+    saveTkMeta();
+    var deleted = [];
+    for (k in tkTomb) deleted.push({ owner: tkTombKeyOwner(k), name: tkTombKeyName(k), t: tkTomb[k] });
+    return { tickets: tkState, deleted: deleted, log: tkLog };
+  }
+  function tkTombKeyOwner(k) { return k.charAt(0); }
+  function tkTombKeyName(k) { return k.slice(2); }
+
+  /* 云端访问。404（函数还没上线）/ 5xx / 断网 一律按「暂时够不着」处理 */
+  async function tkApi(method, body) {
+    var res;
+    try {
+      if (method === 'GET') {
+        res = await fetchTimeout(TK_API + '?p=' + encodeURIComponent(moonPass));
+      } else {
+        res = await fetchTimeout(TK_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      }
+    } catch (err) { return { state: 'offline' }; }
+    if (res.status === 401) return { state: 'badpass' };
+    if (!res.ok) return { state: 'offline' };
+    var j = null;
+    try { j = await res.json(); } catch (err) { return { state: 'offline' }; }
+    if (!j || j.ok !== true) return { state: 'offline' };
+    return { state: 'ok', doc: j.doc || null };
+  }
+
+  async function tkSync() {
+    if (!moonPass) { tkSyncState = 'off'; renderTkSync(); return; }
+    if (tkRunning) { tkAgain = true; return; }
+    tkRunning = true;
+    tkSyncState = 'busy';
+    renderTkSync();
+
+    var g = await tkApi('GET');
+    if (g.state === 'ok') {
+      var m = mergeCloudIntoTk(g.doc);
+      var baseRev = (g.doc && typeof g.doc.rev === 'number') ? g.doc.rev : 0;
+      if (tkSameAsCloud(g.doc, m.tickets, m.deleted, m.log)) {
+        tkSyncState = 'ok'; tkSyncedAt = hmNow(); /* 两边本来就一样，不用写 */
+      } else {
+        var p = await tkApi('POST', { p: moonPass, baseRev: baseRev, tickets: m.tickets, deleted: m.deleted, log: m.log });
+        if (p.state === 'ok') { tkSyncState = 'ok'; tkSyncedAt = hmNow(); }
+        else if (p.state === 'badpass') tkSyncState = 'badpass';
+        else if (p.state === 'conflict') {
+          /* 另一台手机刚写过：把它的票夹拿回来重新合，再补一次 */
+          var m2 = mergeCloudIntoTk(p.doc);
+          var p2 = await tkApi('POST', {
+            p: moonPass,
+            baseRev: (p.doc && typeof p.doc.rev === 'number') ? p.doc.rev : 0,
+            tickets: m2.tickets, deleted: m2.deleted, log: m2.log
+          });
+          if (p2.state === 'ok') { tkSyncState = 'ok'; tkSyncedAt = hmNow(); }
+          else tkSyncState = (p2.state === 'badpass') ? 'badpass' : 'offline';
+        }
+        else tkSyncState = 'offline';
+      }
+    } else {
+      tkSyncState = (g.state === 'badpass') ? 'badpass' : 'offline';
+    }
+    tkRunning = false;
+    if (tkAgain) { tkAgain = false; tkSync(); return; }
+    renderTkSync();
+  }
+
+  function renderTkSync() {
+    if (!tkSyncLine || !tkSyncBtn) return;
+    tkSyncBtn.textContent = moonPass ? '☁ 票亭已对暗号' : '☁ 票亭 · 对暗号';
+    var t = '';
+    if (tkSyncState === 'off') t = '票数现在只存在这台手机里';
+    else if (tkSyncState === 'busy') t = '正在和云上的票夹对账…';
+    else if (tkSyncState === 'ok') t = '两台手机同一本票夹' + (tkSyncedAt ? ' · ' + tkSyncedAt : '');
+    else if (tkSyncState === 'offline') t = '暂时够不着云端，先记在本机；能连上时会自动补上';
+    else if (tkSyncState === 'badpass') t = '暗号对不上，点上面重新对一下';
+    tkSyncLine.textContent = t;
+  }
+
+  tkSyncBtn.addEventListener('click', function () {
+    if (moonPass) { tkSync(); return; } /* 已对上：点一下就手动同步 */
+    openSheet({
+      title: '票亭 · 对暗号',
+      sub: '对上暗号（和月亮小屋同一个），两台手机就是同一本票夹。暗号问小汤要——他念给你听就好。',
+      text: '',
+      yesText: '对一下',
+      noText: '先不用',
+      onYes: function (_, txt) {
+        var p = (txt || '').trim();
+        if (!p) { sheetWarn.textContent = '暗号要填的，问小汤要一个'; return false; }
+        moonPass = p;
+        tkSyncState = 'busy';
+        renderTkSync();
+        tkApi('GET').then(function (g) {
+          if (g.state === 'badpass') {
+            moonPass = lsGet(MOON_PASS_KEY) || ''; /* 对不上：保留原来的暗号 */
+            tkSyncState = 'badpass';
+            renderTkSync();
+            try { renderMoonSync(); } catch (err) {}
+            return;
+          }
+          lsSet(MOON_PASS_KEY, p);
+          try { renderMoonSync(); } catch (err) {}
+          if (g.state === 'offline') {
+            tkSyncState = 'offline';
+            renderTkSync();
+            return;
+          }
+          tkSync();
+        });
+      }
+    });
+  });
+
+  /* ── 印新券弹层 ── */
+  var tkFormMask = $('#tkFormMask'), tkfName = $('#tkfName'), tkfIcon = $('#tkfIcon'),
+      tkfCount = $('#tkfCount'), tkfNote = $('#tkfNote'), tkfWarn = $('#tkfWarn'),
+      tkfYes = $('#tkfYes'), tkfNo = $('#tkfNo'),
+      tkfOwnerY = $('#tkfOwnerY'), tkfOwnerT = $('#tkfOwnerT');
+  var tkfOwner = 'y';
+  function tkfSetOwner(o) {
+    tkfOwner = o;
+    tkfOwnerY.classList.toggle('on', o === 'y');
+    tkfOwnerT.classList.toggle('on', o === 't');
+  }
+  function openTkForm() {
+    tkfName.value = '';
+    tkfIcon.value = '';
+    tkfCount.value = '1';
+    tkfNote.value = '';
+    tkfWarn.textContent = '';
+    tkfSetOwner('y');
+    tkFormMask.classList.add('show');
+    setTimeout(function () { try { tkfName.focus(); } catch (err) {} }, 250);
+  }
+  function closeTkForm() { tkFormMask.classList.remove('show'); }
+  tkPrintBtn.addEventListener('click', openTkForm);
+  tkfNo.addEventListener('click', closeTkForm);
+  tkFormMask.addEventListener('click', function (e) { if (e.target === tkFormMask) closeTkForm(); });
+  tkfOwnerY.addEventListener('click', function () { tkfSetOwner('y'); });
+  tkfOwnerT.addEventListener('click', function () { tkfSetOwner('t'); });
+  /* 桌面端顺手：输入框里回车直接印（说明栏留换行） */
+  [tkfName, tkfIcon, tkfCount].forEach(function (inp) {
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); tkfYes.click(); }
+    });
+  });
+  tkfYes.addEventListener('click', function () {
+    var name = tkfName.value.trim();
+    if (!name) { tkfWarn.textContent = '券名得有一个呀'; return; }
+    var icon = tkfIcon.value.trim() || '🎟️';
+    var count = parseInt(tkfCount.value, 10);
+    if (!(count >= 1 && count <= 99)) { tkfWarn.textContent = '张数印 1～99 之间'; return; }
+    var dup = tkState.some(function (t) { return t.owner === tkfOwner && t.name === name; });
+    if (dup) { tkfWarn.textContent = '这个票夹里已经有同名券啦'; return; }
+    delete tkTomb[tkKey(tkfOwner, name)]; /* 同名的撕过 → 重印复活 */
+    tkState.push({
+      owner: tkfOwner, icon: icon, name: name, count: count,
+      note: tkfNote.value.trim().slice(0, 120), t: Date.now()
+    });
+    tkLogPush(icon, name, 'add');
+    saveTkLocal();
+    tkLocalChanged();
+    closeTkForm();
+    popSound();
+  });
+
+  /* 票亭 · 启动。装载必须先于同步：重载后暗号已在 localStorage 里，
+     这里会立刻开同步——若先同步后装载，第一轮合并会把空票夹当本机账 */
+  loadTkMeta();
+  loadTkData();
+  tkPrev = snapTk();
+  renderTkSync();
+  if (moonPass) tkSync();
+
   /* ── 宠物屋 · 家里的小家伙们 ──
      设计红线（社区调研结论）：宠物永不死、没有饥饿惩罚、没有打卡压力；
      想加新成员，往 PETS 里照抄一条就行。零食和成长是全屋共享的，
@@ -4098,6 +4626,8 @@
   }
 
   renderJournal();
+  loadTkMeta();
+  loadTkData();
   renderTickets();
   renderStubs();
   renderChips();
