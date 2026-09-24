@@ -997,6 +997,23 @@
   }
   .tkf-seg button.on { background: var(--rose); border-color: var(--rose); color: #fff; }
   .tkf-warn { min-height: 1.2em; font-size: 12px; color: #b96a6a; text-align: center; }
+  .tkf-icons {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px;
+    margin-top: -4px;
+  }
+  .tkf-ic {
+    appearance: none; -webkit-appearance: none;
+    border: 1.5px solid rgba(201,138,138,.28); background: rgba(255,250,241,.55);
+    border-radius: 9px; font-size: 17px; line-height: 1;
+    padding: 6px 0; cursor: pointer; text-align: center;
+    transition: transform .12s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    -webkit-user-select: none; user-select: none;
+  }
+  .tkf-ic:active { transform: scale(.88); }
+  .tkf-ic.on {
+    border-color: var(--rose); background: rgba(201,138,138,.16);
+    box-shadow: 0 0 0 2px rgba(201,138,138,.18);
+  }
 
   /* ── 月亮小屋（补记与改错）─────────────────────────── */
   .moon-recs { display: flex; flex-direction: column; gap: 10px; }
@@ -1629,7 +1646,8 @@
         </div>
       </div>
       <div class="tkf-row"><span class="tkf-label">券名</span><input id="tkfName" maxlength="30" placeholder="比如：一起看日出券"></div>
-      <div class="tkf-row"><span class="tkf-label">图标</span><input id="tkfIcon" maxlength="8" placeholder="🎟️"></div>
+      <div class="tkf-row"><span class="tkf-label">图标</span><input id="tkfIcon" maxlength="8" placeholder="🎟️ 点下面选，或自己输入"></div>
+      <div class="tkf-icons" id="tkfIcons"></div>
       <div class="tkf-row"><span class="tkf-label">印几张</span><input id="tkfCount" type="number" min="1" max="99" value="1"></div>
       <div class="tkf-row"><span class="tkf-label">券面说明</span><textarea id="tkfNote" rows="2" maxlength="120" placeholder="怎么兑现，写清楚（可以空着）"></textarea></div>
     </div>
@@ -4110,6 +4128,32 @@
       tkfYes = $('#tkfYes'), tkfNo = $('#tkfNo'),
       tkfOwnerY = $('#tkfOwnerY'), tkfOwnerT = $('#tkfOwnerT');
   var tkfOwner = 'y';
+  /* 常用图标：点选即用；网格外的 emoji 仍可手动输入 */
+  var TK_ICONS = ['💆', '🧋', '☕', '🍰', '🍜', '🍿', '🎮', '🎶', '🛍️', '📸', '🌅', '💤',
+                  '🫂', '🤗', '😘', '❤️', '🎁', '✨', '🚗', '✈️', '⚽', '🧹', '🍳', '📖'];
+  (function renderTkIcons() {
+    var box = $('#tkfIcons');
+    TK_ICONS.forEach(function (ic) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tkf-ic';
+      b.textContent = ic;
+      b.setAttribute('aria-label', '选用图标 ' + ic);
+      b.addEventListener('click', function () {
+        tkfIcon.value = ic;
+        tkfSyncIconGrid();
+      });
+      box.appendChild(b);
+    });
+  })();
+  function tkfSyncIconGrid() {
+    var v = tkfIcon.value.trim();
+    var btns = $('#tkfIcons').children;
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('on', btns[i].textContent === v);
+    }
+  }
+  tkfIcon.addEventListener('input', tkfSyncIconGrid);
   function tkfSetOwner(o) {
     tkfOwner = o;
     tkfOwnerY.classList.toggle('on', o === 'y');
@@ -4121,6 +4165,7 @@
     tkfCount.value = '1';
     tkfNote.value = '';
     tkfWarn.textContent = '';
+    tkfSyncIconGrid();
     tkfSetOwner('y');
     tkFormMask.classList.add('show');
     setTimeout(function () { try { tkfName.focus(); } catch (err) {} }, 250);
