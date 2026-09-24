@@ -1622,6 +1622,7 @@
   <div class="tk-toolbar">
     <button class="tk-chip" id="tkPrintBtn">🖨️ 印一张新券</button>
     <button class="tk-chip" id="tkSyncBtn">☁ 票亭 · 对暗号</button>
+    <button class="tk-chip" id="tkBackupBtn">📤 备份 / 导入</button>
   </div>
   <p class="tk-sync" id="tkSyncLine"></p>
   <p class="tk-rules">
@@ -3933,7 +3934,8 @@
   var tkSyncedAt = '';
   var tkRunning = false;
   var tkAgain = false;
-  var tkSyncLine = $('#tkSyncLine'), tkSyncBtn = $('#tkSyncBtn'), tkPrintBtn = $('#tkPrintBtn');
+  var tkSyncLine = $('#tkSyncLine'), tkSyncBtn = $('#tkSyncBtn'), tkPrintBtn = $('#tkPrintBtn'),
+      tkBackupBtn = $('#tkBackupBtn');
 
   function canonTkList(l, keyf) {
     return JSON.stringify(l.slice().sort(function (a, b) { return keyf(a) < keyf(b) ? -1 : 1; }));
@@ -4118,6 +4120,32 @@
           }
           tkSync();
         });
+      }
+    });
+  });
+
+  /* ── 备份 / 导入码：云没点亮前的过渡桥（码里是整本票夹，微信发文本即可）── */
+  tkBackupBtn.addEventListener('click', function () {
+    var deleted = [], k;
+    for (k in tkTomb) deleted.push({ owner: tkTombKeyOwner(k), name: tkTombKeyName(k), t: tkTomb[k] });
+    openSheet({
+      title: '票亭 · 备份 / 导入',
+      sub: '这串码就是整本票夹：全选复制，微信发给对方；对方在票亭点「备份 / 导入」粘进来点「导入」，两边的票就齐了。',
+      text: JSON.stringify({ v: 1, tickets: tkState, deleted: deleted, log: tkLog }),
+      yesText: '导入',
+      noText: '关闭',
+      onYes: function (_, txt) {
+        var ok = false;
+        try {
+          var d = JSON.parse(txt);
+          if (d && d.v === 1 && Array.isArray(d.tickets)) {
+            var m = mergeCloudIntoTk({ tickets: d.tickets, deleted: d.deleted || [], log: d.log || [] });
+            tkLocalChanged();
+            showUndo('导入好了，现在共 ' + tkState.length + ' 种券 · 在架 ' + ticketTotal() + ' 张', null);
+            ok = true;
+          }
+        } catch (err) {}
+        if (!ok) { sheetWarn.textContent = '这串备份码没认出来，检查一下是不是复制完整了'; return false; }
       }
     });
   });
