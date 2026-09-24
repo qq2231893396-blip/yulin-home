@@ -3635,7 +3635,10 @@
        删除变成「墓碑」传过去，删了就是删了（重新记同一天会自然复活）
      · 云暂时够不着（没网、函数没上线）就先记本机，能连上时自动补
      · 备份码照旧可用：云就算哪天不在了，码在，记录就在 */
-  var MOON_API = 'https://love-you-yh-to-tl.netlify.app/.netlify/functions/moon';
+  /* 云账本地址：2026-09-24 起走 Cloudflare Worker（KV 存储，口令不变）。
+     Netlify 版（love-you-yh-to-tl.netlify.app/.netlify/functions/moon）10-12 额度
+     刷新部署后可切回；本地联调用 localStorage 的 yulin_moon_api 指向 mock */
+  var MOON_API = 'https://yulin-ledger.yulin-ledger.workers.dev/moon';
   /* 调试开关：localStorage 设 yulin_moon_api 可把账本指向本地 mock；平时别动 */
   try { MOON_API = localStorage.getItem('yulin_moon_api') || MOON_API; } catch (err) {}
   var MOON_PASS_KEY = 'yulin_moon_pass';
@@ -3928,7 +3931,8 @@
      API：love-you-yh-to-tl.netlify.app/.netlify/functions/tickets（store 独立命名空间）
      口令与月亮小屋共用一个（同 localStorage key、同 MOON_PASS_HASH），
      雨含只要对过一次暗号，票亭和月亮小屋就都通了 */
-  var TK_API = 'https://love-you-yh-to-tl.netlify.app/.netlify/functions/tickets';
+  /* 云账本地址：Cloudflare Worker（与月亮小屋同一个口令、同一个云） */
+  var TK_API = 'https://yulin-ledger.yulin-ledger.workers.dev/tickets';
   try { TK_API = localStorage.getItem('yulin_tickets_api') || TK_API; } catch (err) {}
   var tkSyncState = 'off'; /* off | busy | ok | offline | badpass */
   var tkSyncedAt = '';
