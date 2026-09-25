@@ -3647,7 +3647,7 @@
      2026-09-25 起 Deno Deploy 当主线；CF/Netlify 留作备线，将来任何一条
      部署好了前端零改动自动接上。本地联调见下方调试开关 */
   var LEDGER_EPS = [
-    'https://yulin-ledger.deno.dev',
+    'https://yulin-ledger.qq2231893396-blip.deno.net',
     'https://yulin-ledger.yulin-ledger.workers.dev',
     'https://love-you-yh-to-tl.netlify.app/.netlify/functions'
   ];
@@ -3674,9 +3674,11 @@
         if (method === 'GET') {
           res = await fetchTimeout(eps[i] + '/' + which);
         } else {
+          /* Content-Type 用 text/plain（简单请求）：跨域不触发 OPTIONS 预检，
+             省一次易被干扰的往返；服务端只解析 body，不看这个头 */
           res = await fetchTimeout(eps[i] + '/' + which, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(body)
           });
         }
