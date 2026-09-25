@@ -674,24 +674,20 @@
     to   { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -90px))) scale(1.15) rotate(var(--rot, 0deg)); }
   }
 
-  /* ── 音乐按钮 ─────────────────────────── */
-  .music {
-    position: fixed; right: calc(16px + env(safe-area-inset-right));
-    bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50;
-    width: 46px; height: 46px; border-radius: 50%;
-    background: rgba(255,250,241,.14); border: 1px solid rgba(255,255,255,.28);
-    color: #fff; cursor: pointer; display: grid; place-items: center;
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    opacity: 0; pointer-events: none; transition: opacity .8s ease .3s;
+  /* ── 云同步状态点：绿=已同步 黄=对账中 红=够不着云端 ─────────────────────────── */
+  .moon-sync::before, .tk-sync::before {
+    content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 6px; vertical-align: 1px; background: rgba(255,255,255,.35);
+    transition: background .4s ease;
   }
-  body.opened .music { opacity: 1; pointer-events: auto; }
-  @media (max-width: 379px) {
-    .music { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .moon-sync.sync-ok::before, .tk-sync.sync-ok::before {
+    background: #7fd8a0; box-shadow: 0 0 7px rgba(127,216,160,.65);
   }
-  .music .ic-off { display: none; }
-  .music.muted .ic-on { display: none; }
-  .music.muted .ic-off { display: block; }
-  .music.muted { color: rgba(255,255,255,.55); }
+  .moon-sync.sync-busy::before, .tk-sync.sync-busy::before {
+    background: #e8c46a; animation: syncPulse 1.2s ease-in-out infinite;
+  }
+  .moon-sync.sync-warn::before, .tk-sync.sync-warn::before { background: #e08a8a; }
+  @keyframes syncPulse { 50% { opacity: .3; } }
 
   /* ── 底部导航坞：四个篇章随时直达 ─────────────────────────── */
   .dock {
@@ -1531,8 +1527,8 @@
       <div class="moon-recs" id="moonRecs"></div>
       <button class="btn-moon-ghost" id="moonBackfillBtn" type="button">＋ 补记过去的一次</button>
       <p class="moon-sync" id="moonSyncLine"></p>
-      <button class="btn-moon-ghost" id="moonPassBtn" type="button">☁ 云上小屋 · 对暗号</button>
-      <p class="moon-note">记录平常只存在这台手机；对上暗号后，两台手机共用云上的同一本小账。<br>换手机前点「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」存一串备份码就稳了。</p>
+      <button class="btn-moon-ghost" id="moonSyncBtn" type="button">☁ 云上小屋 · 立即同步</button>
+      <p class="moon-note">打开页面就自动和云上的小账本对账：两台手机共用同一本小账，这头改完那头就有。<br>没网也不怕：先记在这台手机，连上自动补；真不行还有「<button class="moon-bak" id="moonBackupBtn" type="button">备份 / 导入</button>」这串码兜底。</p>
     </div>
   </div>
   <a class="cross-chip" href="#/">🏠 回家</a>
@@ -1621,7 +1617,7 @@
   </div>
   <div class="tk-toolbar">
     <button class="tk-chip" id="tkPrintBtn">🖨️ 印一张新券</button>
-    <button class="tk-chip" id="tkSyncBtn">☁ 票亭 · 对暗号</button>
+    <button class="tk-chip" id="tkSyncBtn">☁ 票亭 · 立即同步</button>
     <button class="tk-chip" id="tkBackupBtn">📤 备份 / 导入</button>
   </div>
   <p class="tk-sync" id="tkSyncLine"></p>
@@ -1638,7 +1634,7 @@
 <div class="sheet-mask" id="tkFormMask" role="dialog" aria-modal="true">
   <div class="sheet">
     <p class="sheet-title">印一张新券</p>
-    <p class="sheet-sub">印好放进票夹，对过暗号的手机马上能看到</p>
+    <p class="sheet-sub">印好放进票夹，另一台手机很快就能看到</p>
     <div class="tkf-grid">
       <div class="tkf-row"><span class="tkf-label">放进</span>
         <div class="tkf-seg">
@@ -1680,14 +1676,15 @@
       <button class="amb-btn" data-season="winter">冬</button>
     </div>
   </div>
+  <div class="amb-row"><span class="amb-label">音乐</span>
+    <div class="amb-seg" id="ambMusicSeg">
+      <button class="amb-btn" data-music="on">开</button>
+      <button class="amb-btn" data-music="off">关</button>
+    </div>
+  </div>
   <p class="amb-status" id="ambStatus"></p>
   <p class="amb-poem" id="ambPoem"></p>
 </div>
-
-<button class="music" id="musicBtn" aria-label="音乐开关">
-  <svg class="ic-on" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/></svg>
-  <svg class="ic-off" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v11.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><line x1="3.5" y1="20.5" x2="20.5" y2="3.5"/></svg>
-</button>
 
 <nav class="dock" id="dock" aria-label="板块导航">
   <a class="dock-item" href="#/" data-route="home"><span class="d-ic" aria-hidden="true">🏠</span><span class="d-tx">家</span></a>
@@ -2164,6 +2161,13 @@
         b.classList.toggle('on', b.dataset[m[1]] === m[2]);
       });
     });
+    var mseg = document.getElementById('ambMusicSeg');
+    if (mseg) {
+      var on = !musicPrefOff();
+      Array.prototype.forEach.call(mseg.querySelectorAll('.amb-btn'), function (b) {
+        b.classList.toggle('on', (b.dataset.music === 'on') === on);
+      });
+    }
   }
   function syncStatus(a) {
     if (ambStatus) {
@@ -2210,6 +2214,7 @@
     ambPanel.addEventListener('click', function (e) {
       var b = e.target.closest('.amb-btn');
       if (!b) return;
+      if (b.dataset.music) { setMusic(b.dataset.music === 'on'); return; }
       if (b.dataset.phase) amb.phase = b.dataset.phase;
       if (b.dataset.season) amb.season = b.dataset.season;
       saveAmb();
@@ -2301,11 +2306,18 @@
     var t = actx.currentTime + .02;
     [M.G4, M.E5, M.G5, M.C6].forEach(function (f, i) { note(t + i * .12, f, 1.3, .13); });
   }
-  var musicBtn = $('#musicBtn');
-  musicBtn.addEventListener('click', function () {
-    if (playing) { stopLoop(); musicBtn.classList.add('muted'); }
-    else { startLoop(); musicBtn.classList.remove('muted'); }
-  });
+  /* 音乐开关住进了天色面板（点太阳/月亮呼出）：
+     手动关过一次就记住，下次开门不再自动响；再点「开」随时请回来 */
+  var MUSIC_KEY = 'yulin_music';
+  function musicPrefOff() { return lsGet(MUSIC_KEY) === 'off'; }
+  function setMusic(on) {
+    try {
+      if (on) localStorage.removeItem(MUSIC_KEY);
+      else localStorage.setItem(MUSIC_KEY, 'off');
+    } catch (err) {}
+    if (on) startLoop(); else stopLoop();
+    syncPanelUI();
+  }
 
   /* ── 打字机 ── */
   function typewrite(el, text, speed, done) {
@@ -2401,7 +2413,7 @@
     if (opened) return;
     opened = true;
     door.classList.add('open');
-    startLoop();
+    if (lsGet(MUSIC_KEY) !== 'off') startLoop();
     setTimeout(function () {
       document.body.classList.add('opened');
       $('#letter').classList.add('show');
@@ -2834,12 +2846,8 @@
   function tkLocalChanged() {
     tkPrev = snapTk();
     saveTkMeta();
-    if (moonPass) {
-      clearTimeout(tkTimer);
-      tkTimer = setTimeout(function () { tkSync(); }, 1200);
-    } else {
-      renderTkSync();
-    }
+    clearTimeout(tkTimer);
+    tkTimer = setTimeout(function () { tkSync(); }, 1200);
   }
   function tkTouch(t) { t.t = Date.now(); }
   function tkLogPush(icon, name, act) {
@@ -3240,13 +3248,13 @@
   /* ── 撤销提示（可逆操作给 6 秒反悔期）── */
   var undoToast = $('#undoToast'), undoMsg = $('#undoMsg'), undoBtn = $('#undoBtn');
   var undoTimer = null, undoCb = null;
-  function showUndo(msg, cb) {
+  function showUndo(msg, cb, ms) {
     undoMsg.textContent = msg;
     undoCb = cb || null;
     undoBtn.hidden = !cb;
     undoToast.classList.add('show');
     clearTimeout(undoTimer);
-    undoTimer = setTimeout(function () { undoToast.classList.remove('show'); undoCb = null; }, 6000);
+    undoTimer = setTimeout(function () { undoToast.classList.remove('show'); undoCb = null; }, ms || 6000);
   }
   undoBtn.addEventListener('click', function () {
     clearTimeout(undoTimer);
@@ -3627,33 +3635,80 @@
     });
   });
 
-  /* ── 云上小账本 · 两台手机同一本账 ──
-     门面在 GitHub Pages，账本在旧站的云函数（Netlify Blobs：站点私有存储，
-     只有那边的函数读得到，公开网页/仓库里都看不到）。
-     · 暗号对上才开始同步：暗号只存在这两台手机里，服务端只有它的哈希
+  /* ── 云上小账本 · 打开页面就是同一本账 ──
+     门面在 GitHub Pages，账本在云函数（Deno Deploy 主线 + CF/Netlify 备线）。
+     · 不需要任何暗号：打开页面自动对账，谁都能看、都能记（站点私密，网址不外泄）
      · 合并永远做加法：谁的记录都不少；同一条两头都改过，取改得晚的那次；
        删除变成「墓碑」传过去，删了就是删了（重新记同一天会自然复活）
-     · 云暂时够不着（没网、函数没上线）就先记本机，能连上时自动补
-     · 备份码照旧可用：云就算哪天不在了，码在，记录就在 */
-  /* 云账本地址：2026-09-24 起走 Cloudflare Worker（KV 存储，口令不变）。
-     Netlify 版（love-you-yh-to-tl.netlify.app/.netlify/functions/moon）10-12 额度
-     刷新部署后可切回；本地联调用 localStorage 的 yulin_moon_api 指向 mock */
-  var MOON_API = 'https://yulin-ledger.yulin-ledger.workers.dev/moon';
-  /* 调试开关：localStorage 设 yulin_moon_api 可把账本指向本地 mock；平时别动 */
-  try { MOON_API = localStorage.getItem('yulin_moon_api') || MOON_API; } catch (err) {}
-  var MOON_PASS_KEY = 'yulin_moon_pass';
+     · 云暂时够不着（没网）就先记本机，连上自动补；一条线挂了自动换下一条
+     · 备份码照旧可用：云就算哪天都不在了，码在，记录就在 */
+  /* 端点按顺序试，上次成功的排最前（记忆在 yulin_ledger_ep）。
+     2026-09-24 曾用 CF workers.dev——实测被 DNS 污染，大陆手机直连不通 →
+     2026-09-25 起 Deno Deploy 当主线；CF/Netlify 留作备线，将来任何一条
+     部署好了前端零改动自动接上。本地联调见下方调试开关 */
+  var LEDGER_EPS = [
+    'https://yulin-ledger.deno.dev',
+    'https://yulin-ledger.yulin-ledger.workers.dev',
+    'https://love-you-yh-to-tl.netlify.app/.netlify/functions'
+  ];
+  var LEDGER_EP_KEY = 'yulin_ledger_ep';
+  /* 调试开关：localStorage 设 yulin_moon_api / yulin_tickets_api 可把账本指到本地
+     mock（值填 base，如 http://127.0.0.1:8354/.netlify/functions）；平时别动 */
+  function ledgerEps(which) {
+    var dbg = lsGet(which === 'moon' ? 'yulin_moon_api' : 'yulin_tickets_api');
+    if (dbg) return [dbg.replace(/\/+(moon|tickets)\/?$/, '')];
+    var list = LEDGER_EPS.slice();
+    var saved = lsGet(LEDGER_EP_KEY), i = saved ? list.indexOf(saved) : -1;
+    if (i > 0) { list.splice(i, 1); list.unshift(saved); }
+    return list;
+  }
+  /* 云端访问：依次试端点，谁通用谁。
+     返回 {state:'ok'|'offline'|'conflict', doc}；
+     401（旧版备线还带口令）/404（函数未上线）/5xx/断网 一律换下一条；
+     409 是「线路通、有人抢写」，原样带回最新 doc 让上层合并重试 */
+  async function ledgerApi(which, method, body) {
+    var eps = ledgerEps(which);
+    for (var i = 0; i < eps.length; i++) {
+      var res;
+      try {
+        if (method === 'GET') {
+          res = await fetchTimeout(eps[i] + '/' + which);
+        } else {
+          res = await fetchTimeout(eps[i] + '/' + which, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        }
+      } catch (err) { continue; }
+      if (res.status === 409) {
+        var cj = null;
+        try { cj = await res.json(); } catch (err) { cj = null; }
+        return { state: 'conflict', doc: (cj && cj.doc) || null };
+      }
+      if (res.ok) {
+        var j = null;
+        try { j = await res.json(); } catch (err) { j = null; }
+        if (j && j.ok === true) {
+          lsSet(LEDGER_EP_KEY, eps[i]);
+          return { state: 'ok', doc: j.doc || null };
+        }
+      }
+    }
+    return { state: 'offline' };
+  }
   var MOON_DEL_KEY = 'yulin_periods_del_v1';
   var MOON_TS_KEY = 'yulin_periods_ts_v1';
-  var moonPass = '';
   var moonTomb = {};    /* 墓碑：本机删掉的 start -> 删除时间 */
   var moonTs = {};      /* 每条记录最后改动时间，两头都改过时谁新听谁的 */
   var moonPrev = {};    /* 上一次看到的本机记录，用来发现「刚刚动了什么」 */
-  var moonState = 'off'; /* off | busy | ok | offline | badpass */
-  var moonSyncedAt = '';
+  var moonState = 'busy'; /* busy | ok | offline */
+  var moonSyncedTs = 0;
   var moonTimer = null;
   var moonRunning = false;
   var moonAgain = false;
-  var moonSyncLine = $('#moonSyncLine'), moonPassBtn = $('#moonPassBtn');
+  var moonEverSynced = false; /* 首拉是装载不算「有新货」，之后的远端变化才提醒 */
+  var moonSyncLine = $('#moonSyncLine'), moonSyncBtn = $('#moonSyncBtn');
 
   function lsGet(k) { try { return localStorage.getItem(k); } catch (err) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (err) {} }
@@ -3664,7 +3719,6 @@
   }
   function hmNow() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   function loadMoonMeta() {
-    moonPass = lsGet(MOON_PASS_KEY) || '';
     try { moonTomb = JSON.parse(lsGet(MOON_DEL_KEY) || '{}') || {}; } catch (err) { moonTomb = {}; }
     try { moonTs = JSON.parse(lsGet(MOON_TS_KEY) || '{}') || {}; } catch (err) { moonTs = {}; }
   }
@@ -3689,12 +3743,8 @@
     for (s in moonPrev) if (!seen[s]) moonTomb[s] = now;
     moonPrev = cur;
     saveMoonMeta();
-    if (moonPass) {
-      clearTimeout(moonTimer);
-      moonTimer = setTimeout(function () { moonSync(); }, 1200);
-    } else {
-      renderMoonSync();
-    }
+    clearTimeout(moonTimer);
+    moonTimer = setTimeout(function () { moonSync(); }, 1200);
   }
 
   /* 合并：云上的账 + 本机的账 → 一本谁都不缺的账。返回待推送的 {data,deleted} */
@@ -3719,7 +3769,7 @@
     for (s in loc) starts[s] = true;
     for (s in cData) starts[s] = true;
 
-    var recChanged = false;
+    var recChanged = false, fresh = 0;
     for (s in starts) {
       var lp = loc[s], cp = cData[s];
       var th = tomb[s];
@@ -3742,7 +3792,10 @@
         else if (lt !== ct) end = (lt > ct ? lp.end : cp.end); /* 谁改得晚听谁的 */
         else if (lp.end && cp.end) end = (lp.end > cp.end ? lp.end : cp.end);
         else end = lp.end || cp.end;
-        if (end !== lp.end) recChanged = true;
+        if (end !== lp.end) {
+          recChanged = true;
+          if (ct > lt) fresh++; /* 是云端改的才提醒，本机自己的改动不算新货 */
+        }
         map[s] = { start: s, end: end };
       } else if (lp) {
         map[s] = { start: s, end: lp.end };
@@ -3750,6 +3803,7 @@
         map[s] = { start: s, end: cp.end || null };      /* 云上有、本机没有：补进来 */
         if (!(s in moonTs) && typeof cp.t === 'number') moonTs[s] = cp.t;
         recChanged = true;
+        fresh++;
       }
     }
     moonTomb = tomb;
@@ -3771,7 +3825,7 @@
     saveMoonMeta();
     var deleted = [];
     for (k in tomb) deleted.push({ start: k, t: tomb[k] });
-    return { data: next, deleted: deleted };
+    return { data: next, deleted: deleted, fresh: fresh };
   }
 
   function canonMoon(l) {
@@ -3797,61 +3851,43 @@
       throw e;
     });
   }
-  async function moonApi(method, body) {
-    /* 返回 {state:'ok'|'offline'|'badpass'|'conflict', doc} */
-    var res;
-    try {
-      if (method === 'GET') {
-        res = await fetchTimeout(MOON_API + '?p=' + encodeURIComponent(moonPass));
-      } else {
-        res = await fetchTimeout(MOON_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-      }
-    } catch (err) { return { state: 'offline' }; }
-    if (res.status === 401) return { state: 'badpass' };
-    if (!res.ok) return { state: 'offline' };
-    var j = null;
-    try { j = await res.json(); } catch (err) { return { state: 'offline' }; }
-    if (!j || j.ok !== true) return { state: 'offline' };
-    return { state: 'ok', doc: j.doc || null };
-  }
-
+  /* 云端访问走共享的 ledgerApi（多线路自动切换）；moonApi 旧函数已并入其中 */
   async function moonSync() {
-    if (!moonPass) { moonState = 'off'; renderMoonSync(); return; }
     if (moonRunning) { moonAgain = true; return; }
     moonRunning = true;
     moonState = 'busy';
     renderMoonSync();
 
-    var g = await moonApi('GET');
+    var freshAll = 0;
+    var g = await ledgerApi('moon', 'GET');
     if (g.state === 'ok') {
       var m = mergeCloudIntoLocal(g.doc);
+      freshAll += m.fresh || 0;
       var baseRev = (g.doc && typeof g.doc.rev === 'number') ? g.doc.rev : 0;
       if (sameAsCloud(g.doc, m.data, m.deleted)) {
-        moonState = 'ok'; moonSyncedAt = hmNow(); /* 两边本来就一样，不用写 */
+        moonState = 'ok'; moonSyncedTs = Date.now(); /* 两边本来就一样，不用写 */
       } else {
-        var p = await moonApi('POST', { p: moonPass, baseRev: baseRev, data: m.data, deleted: m.deleted });
-        if (p.state === 'ok') { moonState = 'ok'; moonSyncedAt = hmNow(); }
-        else if (p.state === 'badpass') moonState = 'badpass';
+        var p = await ledgerApi('moon', 'POST', { baseRev: baseRev, data: m.data, deleted: m.deleted });
+        if (p.state === 'ok') { moonState = 'ok'; moonSyncedTs = Date.now(); }
         else if (p.state === 'conflict') {
           /* 另一台手机刚写过：把它的账拿回来重新合，再补一次 */
           var m2 = mergeCloudIntoLocal(p.doc);
-          var p2 = await moonApi('POST', {
-            p: moonPass,
+          freshAll += m2.fresh || 0;
+          var p2 = await ledgerApi('moon', 'POST', {
             baseRev: (p.doc && typeof p.doc.rev === 'number') ? p.doc.rev : 0,
             data: m2.data, deleted: m2.deleted
           });
-          if (p2.state === 'ok') { moonState = 'ok'; moonSyncedAt = hmNow(); }
-          else moonState = (p2.state === 'badpass') ? 'badpass' : 'offline';
+          if (p2.state === 'ok') { moonState = 'ok'; moonSyncedTs = Date.now(); }
+          else moonState = 'offline';
         }
         else moonState = 'offline';
       }
+      /* 开页面装载那轮不提醒；之后轮询/回前台带来的远端新货才说一声 */
+      if (freshAll > 0 && moonEverSynced) showUndo('🌙 云上小屋有新记录，帮你并进来了', null, 3200);
     } else {
-      moonState = (g.state === 'badpass') ? 'badpass' : 'offline';
+      moonState = 'offline';
     }
+    moonEverSynced = true;
     moonRunning = false;
     if (moonAgain) { moonAgain = false; moonSync(); return; }
     renderMoonSync();
@@ -3859,85 +3895,44 @@
 
   /* 顶部一行小字：如实反映记录现在待在哪（含蓄，不吵） */
   function moonMetaLine() {
-    var n = periods.length ? '已记 ' + periods.length + ' 次' : '数据只留在这台手机里，不上传、没有账号';
-    if (moonState === 'ok') return periods.length ? n + ' · 云上小账本已同步' : '云上小账本 · 对上暗号，两台手机同一本账';
-    if (moonPass) return periods.length ? n + ' · 云端稍后自动补' : n;
+    var n = periods.length ? '已记 ' + periods.length + ' 次 · 云上小账本两台手机一起看'
+                           : '还没有记录；点上面的大按钮就能记';
+    if (moonState === 'offline') return n + ' · 云端暂时够不着，稍后自动补';
     return n;
   }
-
+  function fmtAgo(ts) {
+    if (!ts) return '';
+    var d = Date.now() - ts;
+    if (d < 15e3) return '刚刚';
+    if (d < 36e5) return Math.max(1, Math.floor(d / 6e4)) + ' 分钟前';
+    return pad(new Date(ts).getHours()) + ':' + pad(new Date(ts).getMinutes());
+  }
   function renderMoonSync() {
-    if (!moonSyncLine || !moonPassBtn) return;
-    moonPassBtn.textContent = moonPass ? '☁ 云上小屋 · 已对上暗号' : '☁ 云上小屋 · 对暗号';
+    if (!moonSyncLine) return;
     try { moonMeta.textContent = moonMetaLine(); } catch (err) {}
+    moonSyncLine.classList.remove('sync-ok', 'sync-busy', 'sync-warn');
     var t = '';
-    if (moonState === 'off') t = '记录现在只存在这台手机里';
-    else if (moonState === 'busy') t = '正在和云上的小账本对账…';
-    else if (moonState === 'ok') t = '云上小账本已同步' + (moonSyncedAt ? ' · ' + moonSyncedAt : '');
-    else if (moonState === 'offline') t = '暂时够不着云端，先记在本机；能连上时会自动补上';
-    else if (moonState === 'badpass') t = '暗号对不上，点上面重新对一下';
+    if (moonState === 'busy') { t = '正在和云上的小账本对账…'; moonSyncLine.classList.add('sync-busy'); }
+    else if (moonState === 'ok') { t = '云上小账本已同步' + (moonSyncedTs ? ' · ' + fmtAgo(moonSyncedTs) : ''); moonSyncLine.classList.add('sync-ok'); }
+    else { t = '暂时够不着云端，先记在本机；能连上时会自动补上'; moonSyncLine.classList.add('sync-warn'); }
     moonSyncLine.textContent = t;
   }
 
-  moonPassBtn.addEventListener('click', function () {
-    var cfg = {
-      title: '云上小屋 · 对暗号',
-      sub: '对上暗号，两台手机的月亮小屋就是同一本账。暗号问小汤要——他念给你听就好，别发群里。',
-      text: '',
-      yesText: '对一下',
-      noText: '先不用',
-      onYes: function (_, txt) {
-        var p = (txt || '').trim();
-        if (!p) { sheetWarn.textContent = '暗号要填的，问小汤要一个'; return false; }
-        moonPass = p;
-        moonState = 'busy';
-        renderMoonSync();
-        moonApi('GET').then(function (g) {
-          if (g.state === 'badpass') {
-            moonPass = lsGet(MOON_PASS_KEY) || ''; /* 对不上：保留原来的暗号 */
-            moonState = 'badpass'; /* 明确告诉TA没对上，别装作没事发生 */
-            renderMoonSync();
-            return;
-          }
-          lsSet(MOON_PASS_KEY, p);
-          if (g.state === 'offline') {
-            /* 够不着云端：暗号先记下，等能连上时自动开始同步 */
-            moonState = 'offline';
-            renderMoonSync();
-            return;
-          }
-          moonSync();
-        });
-      }
-    };
-    if (moonPass) {
-      cfg.onDel = function () {
-        moonPass = '';
-        try { localStorage.removeItem(MOON_PASS_KEY); } catch (err) {}
-        moonState = 'off';
-        renderMoonSync();
-        closeSheet();
-      };
-    }
-    openSheet(cfg);
-  });
+  moonSyncBtn.addEventListener('click', function () { moonSync(); });
 
-  /* 云上小账本 · 启动 */
+  /* 云上小账本 · 启动：装载先行，随后无条件开同步（不再需要暗号） */
   loadMoonMeta();
   moonPrev = snapMap();
   renderMoonSync();
-  if (moonPass) moonSync();
+  moonSync();
 
   /* ── 票亭 · 云上票夹（月亮小屋同款：整本存取 + 乐观并发 + 前端合并）──
-     API：love-you-yh-to-tl.netlify.app/.netlify/functions/tickets（store 独立命名空间）
-     口令与月亮小屋共用一个（同 localStorage key、同 MOON_PASS_HASH），
-     雨含只要对过一次暗号，票亭和月亮小屋就都通了 */
-  /* 云账本地址：Cloudflare Worker（与月亮小屋同一个口令、同一个云） */
-  var TK_API = 'https://yulin-ledger.yulin-ledger.workers.dev/tickets';
-  try { TK_API = localStorage.getItem('yulin_tickets_api') || TK_API; } catch (err) {}
-  var tkSyncState = 'off'; /* off | busy | ok | offline | badpass */
-  var tkSyncedAt = '';
+     走共享的 ledgerApi 多线路端点；不需要暗号，打开页面就是同一本票夹 */
+  var tkSyncState = 'busy'; /* busy | ok | offline */
+  var tkSyncedTs = 0;
   var tkRunning = false;
   var tkAgain = false;
+  var tkEverSynced = false; /* 首拉是装载不算「有新货」 */
   var tkSyncLine = $('#tkSyncLine'), tkSyncBtn = $('#tkSyncBtn'), tkPrintBtn = $('#tkPrintBtn'),
       tkBackupBtn = $('#tkBackupBtn');
 
@@ -3953,9 +3948,9 @@
         && canonTkList(log, function (x) { return x.id; }) === canonTkList(cl, function (x) { return x.id; });
   }
 
-  /* 合并：云上的票夹 + 本机的票夹 → 一本谁都不缺的。返回待推送 {tickets, deleted, log} */
+  /* 合并：云上的票夹 + 本机的票夹 → 一本谁都不缺的。返回待推送 {tickets, deleted, log, fresh} */
   function mergeCloudIntoTk(doc) {
-    var cT = {}, cDel = {}, cLog = {}, k;
+    var cT = {}, cDel = {}, cLog = {}, k, fresh = 0;
     if (doc && Array.isArray(doc.tickets)) {
       doc.tickets.forEach(function (r) { if (r && r.name) cT[tkKey(r.owner, r.name)] = r; });
     }
@@ -3990,12 +3985,13 @@
       if (lp && cp) {
         var lt = lp.t || 0, ct2 = cp.t || 0;
         if (lt >= ct2) map[k] = lp;             /* 谁改得晚听谁的；打平听本机 */
-        else map[k] = cp;
+        else { map[k] = cp; fresh++; }          /* 云端改的这版更新 → 算新货 */
       } else if (lp) {
         map[k] = lp;
       } else {
         /* 云上有、本机没有：补进来（云的形状已被服务端收紧过） */
         map[k] = { owner: cp.owner, icon: cp.icon || '🎟️', name: cp.name, count: cp.count, note: cp.note || '', t: cp.t || 0 };
+        fresh++;
       }
     }
     tkTomb = tomb;
@@ -4007,7 +4003,7 @@
     /* 票根墙：并集（按 id），新的在上，超 500 截断 */
     var seenL = {};
     tkLog.forEach(function (l) { seenL[l.id] = true; });
-    for (k in cLog) if (!seenL[k]) { tkLog.push(cLog[k]); seenL[k] = true; }
+    for (k in cLog) if (!seenL[k]) { tkLog.push(cLog[k]); seenL[k] = true; fresh++; }
     tkLog.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
     if (tkLog.length > 500) tkLog = tkLog.slice(0, 500);
 
@@ -4016,119 +4012,65 @@
     saveTkMeta();
     var deleted = [];
     for (k in tkTomb) deleted.push({ owner: tkTombKeyOwner(k), name: tkTombKeyName(k), t: tkTomb[k] });
-    return { tickets: tkState, deleted: deleted, log: tkLog };
+    return { tickets: tkState, deleted: deleted, log: tkLog, fresh: fresh };
   }
   function tkTombKeyOwner(k) { return k.charAt(0); }
   function tkTombKeyName(k) { return k.slice(2); }
 
-  /* 云端访问。404（函数还没上线）/ 5xx / 断网 一律按「暂时够不着」处理 */
-  async function tkApi(method, body) {
-    var res;
-    try {
-      if (method === 'GET') {
-        res = await fetchTimeout(TK_API + '?p=' + encodeURIComponent(moonPass));
-      } else {
-        res = await fetchTimeout(TK_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-      }
-    } catch (err) { return { state: 'offline' }; }
-    if (res.status === 401) return { state: 'badpass' };
-    if (!res.ok) return { state: 'offline' };
-    var j = null;
-    try { j = await res.json(); } catch (err) { return { state: 'offline' }; }
-    if (!j || j.ok !== true) return { state: 'offline' };
-    return { state: 'ok', doc: j.doc || null };
-  }
-
+  /* 云端访问走共享的 ledgerApi（多线路自动切换） */
   async function tkSync() {
-    if (!moonPass) { tkSyncState = 'off'; renderTkSync(); return; }
     if (tkRunning) { tkAgain = true; return; }
     tkRunning = true;
     tkSyncState = 'busy';
     renderTkSync();
 
-    var g = await tkApi('GET');
+    var freshAll = 0;
+    var g = await ledgerApi('tickets', 'GET');
     if (g.state === 'ok') {
       var m = mergeCloudIntoTk(g.doc);
+      freshAll += m.fresh || 0;
       var baseRev = (g.doc && typeof g.doc.rev === 'number') ? g.doc.rev : 0;
       if (tkSameAsCloud(g.doc, m.tickets, m.deleted, m.log)) {
-        tkSyncState = 'ok'; tkSyncedAt = hmNow(); /* 两边本来就一样，不用写 */
+        tkSyncState = 'ok'; tkSyncedTs = Date.now(); /* 两边本来就一样，不用写 */
       } else {
-        var p = await tkApi('POST', { p: moonPass, baseRev: baseRev, tickets: m.tickets, deleted: m.deleted, log: m.log });
-        if (p.state === 'ok') { tkSyncState = 'ok'; tkSyncedAt = hmNow(); }
-        else if (p.state === 'badpass') tkSyncState = 'badpass';
+        var p = await ledgerApi('tickets', 'POST', { baseRev: baseRev, tickets: m.tickets, deleted: m.deleted, log: m.log });
+        if (p.state === 'ok') { tkSyncState = 'ok'; tkSyncedTs = Date.now(); }
         else if (p.state === 'conflict') {
           /* 另一台手机刚写过：把它的票夹拿回来重新合，再补一次 */
           var m2 = mergeCloudIntoTk(p.doc);
-          var p2 = await tkApi('POST', {
-            p: moonPass,
+          freshAll += m2.fresh || 0;
+          var p2 = await ledgerApi('tickets', 'POST', {
             baseRev: (p.doc && typeof p.doc.rev === 'number') ? p.doc.rev : 0,
             tickets: m2.tickets, deleted: m2.deleted, log: m2.log
           });
-          if (p2.state === 'ok') { tkSyncState = 'ok'; tkSyncedAt = hmNow(); }
-          else tkSyncState = (p2.state === 'badpass') ? 'badpass' : 'offline';
+          if (p2.state === 'ok') { tkSyncState = 'ok'; tkSyncedTs = Date.now(); }
+          else tkSyncState = 'offline';
         }
         else tkSyncState = 'offline';
       }
+      if (freshAll > 0 && tkEverSynced) showUndo('🎟️ 票亭的票有更新，帮你并进来了', null, 3200);
     } else {
-      tkSyncState = (g.state === 'badpass') ? 'badpass' : 'offline';
+      tkSyncState = 'offline';
     }
+    tkEverSynced = true;
     tkRunning = false;
     if (tkAgain) { tkAgain = false; tkSync(); return; }
     renderTkSync();
   }
 
   function renderTkSync() {
-    if (!tkSyncLine || !tkSyncBtn) return;
-    tkSyncBtn.textContent = moonPass ? '☁ 票亭已对暗号' : '☁ 票亭 · 对暗号';
+    if (!tkSyncLine) return;
+    tkSyncLine.classList.remove('sync-ok', 'sync-busy', 'sync-warn');
     var t = '';
-    if (tkSyncState === 'off') t = '票数现在只存在这台手机里';
-    else if (tkSyncState === 'busy') t = '正在和云上的票夹对账…';
-    else if (tkSyncState === 'ok') t = '两台手机同一本票夹' + (tkSyncedAt ? ' · ' + tkSyncedAt : '');
-    else if (tkSyncState === 'offline') t = '暂时够不着云端，先记在本机；能连上时会自动补上';
-    else if (tkSyncState === 'badpass') t = '暗号对不上，点上面重新对一下';
+    if (tkSyncState === 'busy') { t = '正在和云上的票夹对账…'; tkSyncLine.classList.add('sync-busy'); }
+    else if (tkSyncState === 'ok') { t = '两台手机同一本票夹' + (tkSyncedTs ? ' · ' + fmtAgo(tkSyncedTs) : ''); tkSyncLine.classList.add('sync-ok'); }
+    else { t = '暂时够不着云端，先记在本机；能连上时会自动补上'; tkSyncLine.classList.add('sync-warn'); }
     tkSyncLine.textContent = t;
   }
 
-  tkSyncBtn.addEventListener('click', function () {
-    if (moonPass) { tkSync(); return; } /* 已对上：点一下就手动同步 */
-    openSheet({
-      title: '票亭 · 对暗号',
-      sub: '对上暗号（和月亮小屋同一个），两台手机就是同一本票夹。暗号问小汤要——他念给你听就好。',
-      text: '',
-      yesText: '对一下',
-      noText: '先不用',
-      onYes: function (_, txt) {
-        var p = (txt || '').trim();
-        if (!p) { sheetWarn.textContent = '暗号要填的，问小汤要一个'; return false; }
-        moonPass = p;
-        tkSyncState = 'busy';
-        renderTkSync();
-        tkApi('GET').then(function (g) {
-          if (g.state === 'badpass') {
-            moonPass = lsGet(MOON_PASS_KEY) || ''; /* 对不上：保留原来的暗号 */
-            tkSyncState = 'badpass';
-            renderTkSync();
-            try { renderMoonSync(); } catch (err) {}
-            return;
-          }
-          lsSet(MOON_PASS_KEY, p);
-          try { renderMoonSync(); } catch (err) {}
-          if (g.state === 'offline') {
-            tkSyncState = 'offline';
-            renderTkSync();
-            return;
-          }
-          tkSync();
-        });
-      }
-    });
-  });
+  tkSyncBtn.addEventListener('click', function () { tkSync(); });
 
-  /* ── 备份 / 导入码：云没点亮前的过渡桥（码里是整本票夹，微信发文本即可）── */
+  /* ── 备份 / 导入码：云够不着时的兜底（码里是整本票夹，微信发文本即可）── */
   tkBackupBtn.addEventListener('click', function () {
     var deleted = [], k;
     for (k in tkTomb) deleted.push({ owner: tkTombKeyOwner(k), name: tkTombKeyName(k), t: tkTomb[k] });
@@ -4234,13 +4176,27 @@
     popSound();
   });
 
-  /* 票亭 · 启动。装载必须先于同步：重载后暗号已在 localStorage 里，
-     这里会立刻开同步——若先同步后装载，第一轮合并会把空票夹当本机账 */
+  /* 票亭 · 启动。装载必须先于同步：开页面会立刻开同步——
+     若先同步后装载，第一轮合并会把空票夹当本机账 */
   loadTkMeta();
   loadTkData();
   tkPrev = snapTk();
   renderTkSync();
-  if (moonPass) tkSync();
+  tkSync();
+
+  /* ── 云同步节拍：常驻轮询 + 回前台立即拉 + 断网恢复自动补 ──
+     A 手机改完，B 手机就算一直停在页面上，25 秒内也会自动到手；
+     切出去再切回来，一秒出头就开始对账——拿起手机就是最新的一本 */
+  var visTimer = null;
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    clearTimeout(visTimer);
+    visTimer = setTimeout(function () { moonSync(); tkSync(); }, 1200);
+  });
+  window.addEventListener('online', function () { moonSync(); tkSync(); });
+  setInterval(function () {
+    if (document.visibilityState === 'visible') { moonSync(); tkSync(); }
+  }, 25000);
 
   /* ── 宠物屋 · 家里的小家伙们 ──
      设计红线（社区调研结论）：宠物永不死、没有饥饿惩罚、没有打卡压力；
